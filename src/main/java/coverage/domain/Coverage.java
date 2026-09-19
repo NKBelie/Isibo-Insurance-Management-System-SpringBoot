@@ -1,5 +1,6 @@
 package coverage.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import insurancePlan.domain.InsurancePlan;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,9 +29,7 @@ public class Coverage {
     private double coverageAmount;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "insurance_plan_id",
-            nullable = false
-    )
+    @JoinColumn(name = "insurance_plan_id", nullable = false)
+    @JsonIgnore
     private InsurancePlan insurancePlan;
 }

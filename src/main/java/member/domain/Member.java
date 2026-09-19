@@ -47,9 +47,6 @@ public class Member extends BaseEntity {
     private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "insurance_plan_id",
-            nullable = false
-    )
+    @JoinColumn(name = "insurance_plan_id", nullable = false)
     private InsurancePlan insurancePlan;
 }

@@ -1,8 +1,10 @@
 package insurancePlan.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import coverage.domain.Coverage;
 import jakarta.persistence.*;
 import lombok.*;
+import member.domain.Member;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,10 +43,15 @@ public class InsurancePlan {
     @Column(name = "status", nullable = false)
     private String status;
 
+    @JsonIgnore
     @OneToMany(
             mappedBy = "insurancePlan",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
     private List<Coverage> coverages = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "insurancePlan")
+    private List<Member> members = new ArrayList<>();
 }
