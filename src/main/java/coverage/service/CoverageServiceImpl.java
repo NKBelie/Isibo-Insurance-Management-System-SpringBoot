@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -23,8 +22,14 @@ public class CoverageServiceImpl implements CoverageService {
         if (theCoverage.getCoverageId() == null ||
                 theCoverage.getCoverageId().isBlank()) {
 
+            throw new RuntimeException("Coverage ID is required");
+        }
+
+        if (coverageRepository.existsByCoverageId(
+                theCoverage.getCoverageId())) {
+
             throw new RuntimeException(
-                    "Coverage ID is required"
+                    "Coverage ID already exists"
             );
         }
 
@@ -36,7 +41,16 @@ public class CoverageServiceImpl implements CoverageService {
             );
         }
 
+        if (coverageRepository.existsByDescriptionIgnoreCase(
+                theCoverage.getDescription())) {
+
+            throw new RuntimeException(
+                    "Coverage description already exists"
+            );
+        }
+
         if (theCoverage.getCoverageAmount() <= 0) {
+
             throw new RuntimeException(
                     "Coverage amount must be greater than zero"
             );
@@ -59,6 +73,7 @@ public class CoverageServiceImpl implements CoverageService {
                         ));
 
         if (!plan.getStatus().equalsIgnoreCase("ACTIVE")) {
+
             throw new RuntimeException(
                     "Cannot add coverage to an inactive plan"
             );
@@ -76,6 +91,7 @@ public class CoverageServiceImpl implements CoverageService {
                         theCoverage.getCoverageAmount();
 
         if (newTotal > plan.getCoverageLimit()) {
+
             throw new RuntimeException(
                     "Total coverage exceeds the insurance plan limit"
             );
@@ -90,6 +106,7 @@ public class CoverageServiceImpl implements CoverageService {
     public Coverage updateCoverage(Coverage theCoverage) {
 
         if (theCoverage.getId() == null) {
+
             throw new RuntimeException(
                     "Coverage ID is required"
             );
@@ -101,6 +118,56 @@ public class CoverageServiceImpl implements CoverageService {
                                 new RuntimeException(
                                         "Coverage not found"
                                 ));
+
+        if (theCoverage.getDescription() == null ||
+                theCoverage.getDescription().isBlank()) {
+
+            throw new RuntimeException(
+                    "Coverage description is required"
+            );
+        }
+
+        if (theCoverage.getCoverageAmount() <= 0) {
+
+            throw new RuntimeException(
+                    "Coverage amount must be greater than zero"
+            );
+        }
+
+        InsurancePlan plan = existing.getInsurancePlan();
+
+        if (plan == null) {
+
+            throw new RuntimeException(
+                    "Coverage is not associated with an Insurance Plan"
+            );
+        }
+
+        if (!plan.getStatus().equalsIgnoreCase("ACTIVE")) {
+
+            throw new RuntimeException(
+                    "Cannot update coverage under an inactive plan"
+            );
+        }
+
+        double totalOtherCoverage =
+                coverageRepository
+                        .findByInsurancePlanId(plan.getId())
+                        .stream()
+                        .filter(c -> !c.getId().equals(existing.getId()))
+                        .mapToDouble(Coverage::getCoverageAmount)
+                        .sum();
+
+        double newTotal =
+                totalOtherCoverage +
+                        theCoverage.getCoverageAmount();
+
+        if (newTotal > plan.getCoverageLimit()) {
+
+            throw new RuntimeException(
+                    "Total coverage exceeds the insurance plan limit"
+            );
+        }
 
         existing.setDescription(
                 theCoverage.getDescription()
@@ -117,6 +184,7 @@ public class CoverageServiceImpl implements CoverageService {
     public Coverage deleteCoverage(Coverage theCoverage) {
 
         if (theCoverage.getId() == null) {
+
             throw new RuntimeException(
                     "Coverage ID is required"
             );
@@ -138,6 +206,7 @@ public class CoverageServiceImpl implements CoverageService {
     public Coverage findAllCoverageById(Coverage theCoverage) {
 
         if (theCoverage.getId() == null) {
+
             throw new RuntimeException(
                     "Coverage ID is required"
             );
@@ -153,6 +222,7 @@ public class CoverageServiceImpl implements CoverageService {
 
     @Override
     public List<Coverage> findAllCoverage() {
+
         return coverageRepository.findAll();
     }
 }

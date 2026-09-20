@@ -20,13 +20,7 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Member registerMember(Member theMember) {
 
-        if (theMember.getNationalId() == null ||
-                theMember.getNationalId().isBlank()) {
-
-            throw new RuntimeException(
-                    "National ID is required"
-            );
-        }
+        validateMemberData(theMember);
 
         if (memberRepository.existsById(
                 theMember.getNationalId())) {
@@ -60,15 +54,6 @@ public class MemberServiceImpl implements MemberService {
             );
         }
 
-        if (theMember.getDateOfBirth() == null ||
-                theMember.getDateOfBirth().isAfter(
-                        LocalDate.now())) {
-
-            throw new RuntimeException(
-                    "Invalid date of birth"
-            );
-        }
-
         if (theMember.getInsurancePlan() == null ||
                 theMember.getInsurancePlan().getId() == null) {
 
@@ -86,6 +71,7 @@ public class MemberServiceImpl implements MemberService {
                         ));
 
         if (!plan.getStatus().equalsIgnoreCase("ACTIVE")) {
+
             throw new RuntimeException(
                     "Cannot register member under an inactive plan"
             );
@@ -99,7 +85,9 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Member updateMember(Member theMember) {
 
-        if (theMember.getNationalId() == null) {
+        if (theMember.getNationalId() == null ||
+                theMember.getNationalId().isBlank()) {
+
             throw new RuntimeException(
                     "National ID is required"
             );
@@ -113,20 +101,77 @@ public class MemberServiceImpl implements MemberService {
                                 "Member not found"
                         ));
 
-        existing.setFirstName(theMember.getFirstName());
-        existing.setLastName(theMember.getLastName());
-        existing.setEmail(theMember.getEmail());
-        existing.setPhone(theMember.getPhone());
-        existing.setDateOfBirth(theMember.getDateOfBirth());
-        existing.setGender(theMember.getGender());
-        existing.setAddress(theMember.getAddress());
-        existing.setStatus(theMember.getStatus());
+        validateMemberData(theMember);
+
+        if (!existing.getEmail().equalsIgnoreCase(
+                theMember.getEmail())) {
+
+            if (memberRepository.existsByEmail(
+                    theMember.getEmail())) {
+
+                throw new RuntimeException(
+                        "Email already exists"
+                );
+            }
+        }
+
+        if (!existing.getPhone().equals(
+                theMember.getPhone())) {
+
+            if (memberRepository.existsByPhone(
+                    theMember.getPhone())) {
+
+                throw new RuntimeException(
+                        "Phone number already exists"
+                );
+            }
+        }
+
+        existing.setFirstName(
+                theMember.getFirstName()
+        );
+
+        existing.setLastName(
+                theMember.getLastName()
+        );
+
+        existing.setEmail(
+                theMember.getEmail()
+        );
+
+        existing.setPhone(
+                theMember.getPhone()
+        );
+
+        existing.setDateOfBirth(
+                theMember.getDateOfBirth()
+        );
+
+        existing.setGender(
+                theMember.getGender()
+        );
+
+        existing.setAddress(
+                theMember.getAddress()
+        );
+
+        existing.setStatus(
+                theMember.getStatus()
+        );
 
         return memberRepository.save(existing);
     }
 
     @Override
     public Member deleteMember(Member theMember) {
+
+        if (theMember.getNationalId() == null ||
+                theMember.getNationalId().isBlank()) {
+
+            throw new RuntimeException(
+                    "National ID is required"
+            );
+        }
 
         Member existing =
                 memberRepository.findById(
@@ -144,6 +189,14 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public Member findMemberById(Member theMember) {
 
+        if (theMember.getNationalId() == null ||
+                theMember.getNationalId().isBlank()) {
+
+            throw new RuntimeException(
+                    "National ID is required"
+            );
+        }
+
         return memberRepository.findById(
                 theMember.getNationalId()
         ).orElseThrow(() ->
@@ -154,6 +207,105 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public List<Member> findAllMembers() {
+
         return memberRepository.findAll();
+    }
+
+    private void validateMemberData(Member member) {
+
+        if (member.getNationalId() == null ||
+                member.getNationalId().isBlank()) {
+
+            throw new RuntimeException(
+                    "National ID is required"
+            );
+        }
+
+        if (member.getMemberId() == null ||
+                member.getMemberId().isBlank()) {
+
+            throw new RuntimeException(
+                    "Member ID is required"
+            );
+        }
+
+        if (member.getFirstName() == null ||
+                member.getFirstName().isBlank()) {
+
+            throw new RuntimeException(
+                    "First name is required"
+            );
+        }
+
+        if (member.getLastName() == null ||
+                member.getLastName().isBlank()) {
+
+            throw new RuntimeException(
+                    "Last name is required"
+            );
+        }
+
+        if (member.getEmail() == null ||
+                member.getEmail().isBlank()) {
+
+            throw new RuntimeException(
+                    "Email is required"
+            );
+        }
+
+        if (!member.getEmail().contains("@")) {
+
+            throw new RuntimeException(
+                    "Invalid email address"
+            );
+        }
+
+        if (member.getPhone() == null ||
+                member.getPhone().isBlank()) {
+
+            throw new RuntimeException(
+                    "Phone number is required"
+            );
+        }
+
+        if (member.getDateOfBirth() == null) {
+
+            throw new RuntimeException(
+                    "Date of birth is required"
+            );
+        }
+
+        if (member.getDateOfBirth().isAfter(
+                LocalDate.now())) {
+
+            throw new RuntimeException(
+                    "Date of birth cannot be in the future"
+            );
+        }
+
+        if (member.getGender() == null ||
+                member.getGender().isBlank()) {
+
+            throw new RuntimeException(
+                    "Gender is required"
+            );
+        }
+
+        if (member.getAddress() == null ||
+                member.getAddress().isBlank()) {
+
+            throw new RuntimeException(
+                    "Address is required"
+            );
+        }
+
+        if (member.getStatus() == null ||
+                (!member.getStatus().equalsIgnoreCase("ACTIVE")
+                        && !member.getStatus().equalsIgnoreCase("INACTIVE"))) {
+
+            throw new RuntimeException(
+                    "Status must be ACTIVE or INACTIVE"
+            );
+        }
     }
 }
