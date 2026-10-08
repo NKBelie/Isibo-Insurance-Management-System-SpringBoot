@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${claim.id != null ? 'Edit Claim' : 'Submit Claim'} + ' | ISIBO'">Submit Claim | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2 th:text="${claim.id != null ? 'Edit Pending Claim' : 'Submit Claim'}">Submit Claim</h2>
+                <div class="page-actions"><a class="btn btn-secondary" th:href="@{/claims}">Back to claims</a></div>
+            </div>
+            <div class="form-panel">
+                <form th:action="${claim.id != null ? '/claims/' + claim.id + '/update' : '/claims'}" method="post">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="claimId">Claim ID</label>
+                            <input id="claimId" name="claimId" type="text" th:value="${claim.claimId}"
+                                   th:readonly="${claim.id != null}" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="claimDate">Claim Date</label>
+                            <input id="claimDate" name="claimDate" type="date" th:value="${claim.claimDate}"
+                                   th:max="${today}" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="member">Member</label>
+                            <select id="member" name="member.nationalId" required>
+                                <option value="">Select member</option>
+                                <option th:each="member : ${members}" th:value="${member.nationalId}"
+                                        th:text="${member.memberId + ' - ' + member.firstName + ' ' + member.lastName}"
+                                        th:selected="${claim.member != null and claim.member.nationalId == member.nationalId}">Member</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="healthcareProvider">Healthcare Provider</label>
+                            <select id="healthcareProvider" name="healthcareProvider.id" required>
+                                <option value="">Select provider</option>
+                                <option th:each="provider : ${providers}" th:value="${provider.id}"
+                                        th:text="${provider.name + ' - ' + provider.specialty}"
+                                        th:selected="${claim.healthcareProvider != null and claim.healthcareProvider.id == provider.id}">Provider</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amountClaimed">Amount (RWF)</label>
+                            <input id="amountClaimed" name="amountClaimed" type="number" min="0.01" step="0.01"
+                                   th:value="${claim.amountClaimed > 0 ? claim.amountClaimed : ''}" required />
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" rows="4" maxlength="2000"
+                                      th:text="${claim.description}" required></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit">Save Claim</button>
+                        <a class="btn btn-secondary" th:href="@{/claims}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

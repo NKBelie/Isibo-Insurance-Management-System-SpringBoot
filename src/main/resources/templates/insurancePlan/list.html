@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Insurance Plans | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/tables.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-header">
+                <h2>Insurance Plans</h2>
+                <div class="page-actions">
+                    <a class="btn btn-primary" th:href="@{/insurance-plans/new}">Create Insurance Plan</a>
+                </div>
+            </div>
+
+            <div class="table-shell">
+                <div class="table-toolbar">
+                    <div class="filter-row">
+                        <input id="insurance-plan-search" type="text" placeholder="Search plan" />
+                        <select id="insurance-plan-status-filter" aria-label="Filter by status">
+                            <option value="">All Status</option>
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="INACTIVE">INACTIVE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Plan ID</th>
+                            <th>Plan Name</th>
+                            <th>Plan Code</th>
+                            <th>Premium</th>
+                            <th>Coverage Limit</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="plan : ${insurancePlans}" th:data-insurance-plan-row="${plan.id}" th:data-status="${plan.status}">
+                            <td th:text="${plan.insurancePlanId}">PLAN-001</td>
+                            <td th:text="${plan.insurancePlanName}">Basic Plan</td>
+                            <td th:text="${plan.planCode}">BASIC</td>
+                            <td th:text="${#numbers.formatDecimal(plan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">100000 RWF</td>
+                            <td th:text="${#numbers.formatDecimal(plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">5000000 RWF</td>
+                            <td th:text="${plan.durationMonths + ' months'}">12 months</td>
+                            <td>
+                                <span class="status-badge" th:classappend="${#strings.equalsIgnoreCase(plan.status, 'ACTIVE')} ? ' status-active' : ' status-inactive'"
+                                      th:text="${plan.status}">ACTIVE</span>
+                            </td>
+                            <td>
+                                <div class="action-group">
+                                    <a class="action-link primary" th:href="@{/insurance-plans/{id}(id=${plan.id})}">View</a>
+                                    <a class="action-link" th:href="@{/insurance-plans/{id}/edit(id=${plan.id})}">Edit</a>
+                                    <form th:action="@{/insurance-plans/{id}/delete(id=${plan.id})}" method="post" style="display:inline;">
+                                        <button class="action-link danger" type="submit" data-confirm-delete="Delete Insurance Plan?">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(insurancePlans)}">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <h4>No insurance plans found.</h4>
+                                    <p>Create your first plan to start insuring members.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+<script th:src="@{/js/insurancePlan.js}"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Insurance Plan Details | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-header">
+                <h2>Insurance Plan Details</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/insurance-plans}">Back to plans</a>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <div>
+                        <h3 th:text="${insurancePlan.insurancePlanName}">Plan Name</h3>
+                        <span class="status-badge" th:classappend="${#strings.equalsIgnoreCase(insurancePlan.status, 'ACTIVE')} ? ' status-active' : ' status-inactive'"
+                            th:text="${insurancePlan.status}">ACTIVE</span>
+                    </div>
+                    <div class="action-group">
+                        <a class="action-link" th:href="@{/insurance-plans/{id}/edit(id=${insurancePlan.id})}">Edit</a>
+                        <form th:action="@{/insurance-plans/{id}/delete(id=${insurancePlan.id})}" method="post" style="display:inline;">
+                            <button class="action-link danger" type="submit" data-confirm-delete="Delete Insurance Plan?">Delete</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="field-group">
+                        <label>Plan ID</label>
+                        <span th:text="${insurancePlan.insurancePlanId}">PLAN-001</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Plan Code</label>
+                        <span th:text="${insurancePlan.insurancePlanId}">BASIC</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Monthly Premium</label>
+                        <span th:text="${#numbers.formatDecimal(insurancePlan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">100000 RWF</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Coverage Limit</label>
+                        <span th:text="${#numbers.formatDecimal(insurancePlan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">5000000 RWF</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Duration</label>
+                        <span th:text="${insurancePlan.durationMonths + ' months'}">12 months</span>
+                    </div>
+                    <div class="field-group full-span">
+                        <label>Description</label>
+                        <span th:text="${insurancePlan.description}">Description</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

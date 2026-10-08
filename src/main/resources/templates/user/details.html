@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Details | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2 th:text="${user.username}">User Details</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/users}">Back to users</a>
+                    <a class="btn btn-primary" th:href="@{/users/{id}/edit(id=${user.id})}">Edit User</a>
+                </div>
+            </div>
+            <section class="card form-panel">
+                <div class="form-grid">
+                    <div class="info-tile"><span>Username</span><strong th:text="${user.username}">user</strong></div>
+                    <div class="info-tile"><span>Email</span><strong th:text="${user.email}">user@example.com</strong></div>
+                    <div class="info-tile"><span>Role</span><strong th:text="${user.role}">Insurance Officer</strong></div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

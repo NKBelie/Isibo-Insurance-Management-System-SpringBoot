@@ -1,9 +1,12 @@
 package insurancePlan.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import coverage.domain.Coverage;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import member.domain.Member;
 
 import java.util.ArrayList;
@@ -43,15 +46,11 @@ public class InsurancePlan {
     @Column(name = "status", nullable = false)
     private String status;
 
-    @JsonIgnore
-    @OneToMany(
-            mappedBy = "insurancePlan",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @JsonManagedReference
+    @OneToMany(mappedBy = "insurancePlan", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Coverage> coverages = new ArrayList<>();
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "insurancePlan")
+    @JsonManagedReference
+    @OneToMany(mappedBy = "insurancePlan", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Member> members = new ArrayList<>();
 }

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Member Details | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-header">
+                <h2>Member Details</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/members}">Back to members</a>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-header">
+                    <div>
+                        <h3 th:text="${member.firstName + ' ' + member.lastName}">Full Name</h3>
+                        <span class="status-badge" th:classappend="${#strings.equalsIgnoreCase(member.status, 'ACTIVE')} ? ' status-active' : (${#strings.equalsIgnoreCase(member.status, 'INACTIVE')} ? ' status-inactive' : ' status-expired')"
+                              th:text="${member.status}">ACTIVE</span>
+                    </div>
+                    <div class="action-group">
+                        <a class="action-link" th:href="@{/members/{id}/edit(id=${member.nationalId})}">Edit</a>
+                        <form th:action="@{/members/{id}/delete(id=${member.nationalId})}" method="post" style="display:inline;">
+                            <button class="action-link danger" type="submit" data-confirm-delete="Delete Member?">Delete</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="field-group">
+                        <label>Member ID</label>
+                        <span th:text="${member.memberId}">MEM-001</span>
+                    </div>
+                    <div class="field-group">
+                        <label>National ID</label>
+                        <span th:text="${member.nationalId}">1199988</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Email</label>
+                        <span th:text="${member.email}">email@example.com</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Phone</label>
+                        <span th:text="${member.phone}">0788000000</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Date of Birth</label>
+                        <span th:text="${member.dateOfBirth}">2000-01-01</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Insurance Plan</label>
+                        <span th:text="${member.insurancePlan != null ? member.insurancePlan.insurancePlanName : 'Not assigned'}">Plan A</span>
+                    </div>
+                    <div class="field-group full-span">
+                        <label>Address</label>
+                        <span th:text="${member.address}">Address</span>
+                    </div>
+                    <div class="field-group">
+                        <label>Registration Date</label>
+                        <span th:text="${#temporals.format(member.registrationDate, 'yyyy-MM-dd')}">2026-01-01</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

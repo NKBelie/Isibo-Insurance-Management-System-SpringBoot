@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claim Details | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2 th:text="${'Claim ' + claim.claimId}">Claim Details</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/claims}">Back to claims</a>
+                    <a class="btn btn-secondary" sec:authorize="hasRole('ADMIN')" th:if="${claim.status == 'PENDING'}"
+                       th:href="@{/claims/{id}/edit(id=${claim.id})}">Edit</a>
+                    <a class="btn btn-primary" sec:authorize="hasRole('OFFICER')" th:if="${claim.status == 'PENDING'}"
+                       th:href="@{/claims/{id}/review(id=${claim.id})}">Review Claim</a>
+                </div>
+            </div>
+            <section class="card form-panel">
+                <div class="form-grid">
+                    <div class="info-tile"><span>Claim ID</span><strong th:text="${claim.claimId}">CLM-001</strong></div>
+                    <div class="info-tile"><span>Claim Date</span><strong th:text="${claim.claimDate}">2026-10-01</strong></div>
+                    <div class="info-tile"><span>Member</span><strong th:text="${claim.member.memberId + ' - ' + claim.member.firstName + ' ' + claim.member.lastName}">Member</strong></div>
+                    <div class="info-tile"><span>Provider</span><strong th:text="${claim.healthcareProvider.name}">Provider</strong></div>
+                    <div class="info-tile"><span>Amount</span><strong th:text="${#numbers.formatDecimal(claim.amountClaimed, 0, 'COMMA', 0, 'POINT') + ' RWF'}">10000 RWF</strong></div>
+                    <div class="info-tile"><span>Status</span><strong th:text="${claim.status}">PENDING</strong></div>
+                    <div class="info-tile"><span>Decision Date</span><strong th:text="${claim.decisionDate != null ? claim.decisionDate : 'Not decided'}">Not decided</strong></div>
+                    <div class="info-tile"><span>Reviewed By</span><strong th:text="${claim.insuranceOfficer != null ? claim.insuranceOfficer.fullName : 'Not assigned'}">Not assigned</strong></div>
+                    <div class="info-tile full-width"><span>Description</span><strong th:text="${claim.description}">Claim description</strong></div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

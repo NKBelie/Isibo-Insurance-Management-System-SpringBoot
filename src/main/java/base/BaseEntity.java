@@ -1,5 +1,6 @@
 package base;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 public abstract class BaseEntity {
 
     @CreationTimestamp
+    @Column(name = "registration_date", updatable = false)
     private LocalDateTime registrationDate;
 
     public LocalDateTime getRegistrationDate() {

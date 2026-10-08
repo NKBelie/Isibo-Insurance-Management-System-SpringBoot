@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Review Claim | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2 th:text="${'Review Claim ' + claim.claimId}">Review Claim</h2>
+                <div class="page-actions"><a class="btn btn-secondary" th:href="@{/claims/{id}(id=${claim.id})}">Back to claim</a></div>
+            </div>
+            <div class="form-panel">
+                <p><strong>Member:</strong> <span th:text="${claim.member.firstName + ' ' + claim.member.lastName}">Member</span></p>
+                <p><strong>Provider:</strong> <span th:text="${claim.healthcareProvider.name}">Provider</span></p>
+                <p><strong>Claim amount:</strong> <span th:text="${#numbers.formatDecimal(claim.amountClaimed, 0, 'COMMA', 0, 'POINT') + ' RWF'}">10000 RWF</span></p>
+                <p><strong>Description:</strong> <span th:text="${claim.description}">Description</span></p>
+                <form th:action="@{/claims/{id}/decision(id=${claim.id})}" method="post">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="officerId">Reviewing Officer</label>
+                            <select id="officerId" name="officerId" required>
+                                <option value="">Select officer</option>
+                                <option th:each="officer : ${officers}" th:value="${officer.id}"
+                                        th:text="${officer.officerId + ' - ' + officer.fullName}">Officer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Decision</label>
+                            <select id="status" name="status" required>
+                                <option value="">Select decision</option>
+                                <option value="APPROVED">Approve</option>
+                                <option value="REJECTED">Reject</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p th:if="${#lists.isEmpty(officers)}" class="alert alert-error">Register an Insurance Officer before reviewing claims.</p>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit" th:disabled="${#lists.isEmpty(officers)}">Save Decision</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

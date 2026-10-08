@@ -1,0 +1,21 @@
+<header th:fragment="header" class="topbar">
+    <div class="topbar-left">
+        <button type="button" class="sidebar-toggle" aria-label="Open menu">Menu</button>
+        <div>
+            <p class="eyebrow">ISIBO</p>
+            <h1 th:text="${pageTitle != null ? pageTitle : 'Dashboard'}">Dashboard</h1>
+        </div>
+    </div>
+
+    <div class="topbar-actions">
+        <div class="search-box">
+            <span>⌕</span>
+            <input type="text" placeholder="Search" aria-label="Search" />
+        </div>
+        <span class="user-chip">ISIBO System</span>
+        <div class="user-chip">
+            <span class="user-avatar">BN</span>
+            <span>Admin</span>
+        </div>
+    </div>
+</header>

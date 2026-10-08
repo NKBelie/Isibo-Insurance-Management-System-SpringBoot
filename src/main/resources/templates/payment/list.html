@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payments | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/tables.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <div><h2>Payments</h2><p>Total in results: <strong th:text="${#numbers.formatDecimal(totalPaymentAmount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</strong></p></div>
+                <div class="page-actions" sec:authorize="hasRole('ADMIN')"><a class="btn btn-primary" th:href="@{/payments/new}">Record Payment</a></div>
+            </div>
+            <div class="table-shell">
+                <form class="table-toolbar" method="get" th:action="@{/payments}">
+                    <div class="filter-row">
+                        <input type="search" name="search" placeholder="Search payment, member or method"
+                               th:value="${search}" aria-label="Search payments" />
+                        <button class="btn btn-secondary" type="submit">Search</button>
+                    </div>
+                </form>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Payment ID</th><th>Member</th><th>Amount</th><th>Date</th><th>Method</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <tr th:each="payment : ${payments}">
+                            <td th:text="${payment.paymentId}">PAY-001</td>
+                            <td th:text="${payment.member.memberId + ' - ' + payment.member.firstName + ' ' + payment.member.lastName}">Member</td>
+                            <td th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">10000 RWF</td>
+                            <td th:text="${payment.paymentDate}">2026-10-01</td>
+                            <td th:text="${payment.paymentMethod}">Cash</td>
+                            <td><div class="action-group">
+                                <a class="action-link primary" th:href="@{/payments/{id}(id=${payment.id})}">View</a>
+                                <a class="action-link" sec:authorize="hasRole('ADMIN')" th:href="@{/payments/{id}/edit(id=${payment.id})}">Edit</a>
+                                <form sec:authorize="hasRole('ADMIN')" th:action="@{/payments/{id}/delete(id=${payment.id})}" method="post" style="display:inline;">
+                                    <button class="action-link danger" type="submit" data-confirm-delete="Delete this payment record?">Delete</button>
+                                </form>
+                            </div></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(payments)}"><td colspan="6"><div class="empty-state"><h4>No payments found.</h4></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

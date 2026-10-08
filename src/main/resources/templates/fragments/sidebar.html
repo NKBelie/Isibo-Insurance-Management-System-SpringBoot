@@ -1,0 +1,69 @@
+<aside th:fragment="sidebar" class="sidebar" id="sidebar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <div class="sidebar-header">
+        <div class="brand-mark">
+            <span class="brand-badge">I</span>
+            <div>
+                <span class="brand-name">ISIBO</span>
+                <small>Insurance</small>
+            </div>
+        </div>
+        <button type="button" class="sidebar-close" aria-label="Close navigation">Close</button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Main navigation">
+        <a class="nav-item" th:href="@{/dashboard}" th:classappend="${requestURI == '/dashboard'} ? ' active' : ''">
+            <span class="nav-icon">DB</span>
+            <span>Dashboard</span>
+        </a>
+        <a class="nav-item" th:href="@{/members}" th:classappend="${#strings.contains(requestURI, '/members')} ? ' active' : ''">
+            <span class="nav-icon">MB</span>
+            <span>Members</span>
+        </a>
+        <a class="nav-item" th:href="@{/insurance-plans}" th:classappend="${#strings.contains(requestURI, '/insurance-plans')} ? ' active' : ''">
+            <span class="nav-icon">PL</span>
+            <span>Insurance Plans</span>
+        </a>
+        <a class="nav-item" th:href="@{/coverages}" th:classappend="${#strings.contains(requestURI, '/coverages')} ? ' active' : ''">
+            <span class="nav-icon">CV</span>
+            <span>Coverage</span>
+        </a>
+        <a class="nav-item" sec:authorize="hasRole('ADMIN')" th:href="@{/providers}" th:classappend="${#strings.contains(requestURI, '/providers')} ? ' active' : ''">
+            <span class="nav-icon">HP</span>
+            <span>Healthcare Providers</span>
+        </a>
+        <a class="nav-item" th:href="@{/claims}" th:classappend="${#strings.contains(requestURI, '/claims')} ? ' active' : ''">
+            <span class="nav-icon">CL</span>
+            <span>Claims</span>
+        </a>
+        <a class="nav-item" sec:authorize="hasRole('ADMIN')" th:href="@{/officers}" th:classappend="${#strings.contains(requestURI, '/officers')} ? ' active' : ''">
+            <span class="nav-icon">IO</span>
+            <span>Insurance Officers</span>
+        </a>
+        <a class="nav-item" th:href="@{/payments}" th:classappend="${#strings.contains(requestURI, '/payments')} ? ' active' : ''">
+            <span class="nav-icon">PY</span>
+            <span>Payments</span>
+        </a>
+        <a class="nav-item" sec:authorize="hasRole('ADMIN')" th:href="@{/users}" th:classappend="${#strings.contains(requestURI, '/users')} ? ' active' : ''">
+            <span class="nav-icon">US</span>
+            <span>Users</span>
+        </a>
+        <a class="nav-item" href="#">
+            <span class="nav-icon">RP</span>
+            <span>Reports</span>
+        </a>
+        <a class="nav-item" href="#">
+            <span class="nav-icon">ST</span>
+            <span>Settings</span>
+        </a>
+        <a class="nav-item" href="#">
+            <span class="nav-icon">PF</span>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a class="nav-item danger" th:href="@{/logout}">
+            <span>Logout</span>
+        </a>
+    </div>
+</aside>

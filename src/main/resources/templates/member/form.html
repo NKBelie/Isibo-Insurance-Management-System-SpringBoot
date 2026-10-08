@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${member.nationalId != null ? 'Edit Member' : 'New Member'} + ' | ISIBO'">New Member | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-header">
+                <h2 th:text="${member.nationalId != null ? 'Edit Member' : 'Register Member'}">Register Member</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/members}">Back to members</a>
+                </div>
+            </div>
+
+            <div class="form-shell">
+                <form th:action="${member.nationalId != null ? '/members/' + member.nationalId + '/update' : '/members'}" method="post" class="entity-form">
+                    <div class="form-grid two-columns">
+                        <div class="field-group">
+                            <label for="memberId">Member ID</label>
+                            <input id="memberId" name="memberId" type="text" th:value="${member.memberId}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="nationalId">National ID</label>
+                            <input id="nationalId" name="nationalId" type="text" th:value="${member.nationalId}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="firstName">First Name</label>
+                            <input id="firstName" name="firstName" type="text" th:value="${member.firstName}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="lastName">Last Name</label>
+                            <input id="lastName" name="lastName" type="text" th:value="${member.lastName}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="email">Email Address</label>
+                            <input id="email" name="email" type="email" th:value="${member.email}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="phone">Phone Number</label>
+                            <input id="phone" name="phone" type="text" th:value="${member.phone}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <input id="dateOfBirth" name="dateOfBirth" type="date" th:value="${member.dateOfBirth}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status" required>
+                                <option value="ACTIVE" th:selected="${member.status == 'ACTIVE'}">ACTIVE</option>
+                                <option value="INACTIVE" th:selected="${member.status == 'INACTIVE'}">INACTIVE</option>
+                                <option value="PENDING" th:selected="${member.status == 'PENDING'}">PENDING</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="MALE" th:selected="${member.gender == 'MALE'}">MALE</option>
+                                <option value="FEMALE" th:selected="${member.gender == 'FEMALE'}">FEMALE</option>
+                                <option value="OTHER" th:selected="${member.gender == 'OTHER'}">OTHER</option>
+                            </select>
+                        </div>
+                        <div class="field-group full-span">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="3" th:text="${member.address}"></textarea>
+                        </div>
+                        <div class="field-group full-span">
+                            <label for="insurancePlanId">Insurance Plan</label>
+                            <select id="insurancePlanId" name="insurancePlan.id" required>
+                                <option value="">Select a plan</option>
+                                <option th:each="plan : ${insurancePlans}"
+                                        th:value="${plan.id}"
+                                        th:text="${plan.insurancePlanName + ' - ' + plan.status}"
+                                        th:selected="${member.insurancePlan != null and member.insurancePlan.id == plan.id}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit">Save Member</button>
+                        <a class="btn btn-secondary" th:href="@{/members}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

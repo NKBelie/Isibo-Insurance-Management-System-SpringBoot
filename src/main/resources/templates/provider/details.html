@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Provider Details | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2 th:text="${provider.name}">Healthcare Provider</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/providers}">Back to providers</a>
+                    <a class="btn btn-primary" th:href="@{/providers/{id}/edit(id=${provider.id})}">Edit Provider</a>
+                </div>
+            </div>
+            <section class="card form-panel">
+                <div class="form-grid">
+                    <div class="info-tile"><span>Provider ID</span><strong th:text="${provider.providerId}">PROV-001</strong></div>
+                    <div class="info-tile"><span>Name</span><strong th:text="${provider.name}">Healthcare Provider</strong></div>
+                    <div class="info-tile"><span>Specialty</span><strong th:text="${provider.specialty}">General</strong></div>
+                    <div class="info-tile"><span>Contact Number</span><strong th:text="${provider.contactNumber}">+250788000000</strong></div>
+                    <div class="info-tile full-width"><span>Address</span><strong th:text="${provider.address}">Kigali</strong></div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

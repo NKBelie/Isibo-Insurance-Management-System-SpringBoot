@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${coverage.id != null ? 'Edit Coverage' : 'New Coverage'} + ' | ISIBO'">New Coverage | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="page-header">
+                <h2 th:text="${coverage.id != null ? 'Edit Coverage' : 'Add Coverage'}">Add Coverage</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/coverages}">Back to coverages</a>
+                </div>
+            </div>
+
+            <div class="form-shell">
+                <form th:action="${coverage.id != null ? '/coverages/' + coverage.id + '/update' : '/coverages'}" method="post" class="entity-form">
+                    <div class="form-grid two-columns">
+                        <div class="field-group">
+                            <label for="coverageId">Coverage ID</label>
+                            <input id="coverageId" name="coverageId" type="text" th:value="${coverage.coverageId}" required />
+                        </div>
+                        <div class="field-group">
+                            <label for="insurancePlanId">Insurance Plan</label>
+                            <select id="insurancePlanId" name="insurancePlan.id" required>
+                                <option value="">Select a plan</option>
+                                <option th:each="plan : ${insurancePlans}"
+                                        th:value="${plan.id}"
+                                        th:text="${plan.insurancePlanName + ' - ' + plan.status}"
+                                        th:selected="${coverage.insurancePlan != null and coverage.insurancePlan.id == plan.id}"></option>
+                            </select>
+                        </div>
+                        <div class="field-group full-span">
+                            <label for="description">Coverage Description</label>
+                            <textarea id="description" name="description" rows="3" th:text="${coverage.description}" required></textarea>
+                        </div>
+                        <div class="field-group">
+                            <label for="coverageAmount">Coverage Amount</label>
+                            <input id="coverageAmount" name="coverageAmount" type="number" min="0" step="0.01" th:value="${coverage.coverageAmount}" required />
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit">Save Coverage</button>
+                        <a class="btn btn-secondary" th:href="@{/coverages}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+<script th:src="@{/js/coverage.js}"></script>
+</body>
+</html>

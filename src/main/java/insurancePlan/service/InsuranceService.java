@@ -3,11 +3,12 @@ package insurancePlan.service;
 import insurancePlan.domain.InsurancePlan;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface InsuranceService {
-    InsurancePlan registerInsurance(InsurancePlan theInsurance);
-    InsurancePlan updateInsurance(InsurancePlan theInsurance);
-    InsurancePlan deleteInsurance(InsurancePlan theInsurance);
-    InsurancePlan findInsuranceById(InsurancePlan theInsurance);
+    InsurancePlan registerInsurance(InsurancePlan insurancePlan);
+    InsurancePlan updateInsurance(UUID insurancePlanId, InsurancePlan insurancePlan);
+    InsurancePlan deleteInsurance(UUID insurancePlanId);
+    InsurancePlan findInsuranceById(UUID insurancePlanId);
     List<InsurancePlan> findAllInsurancePlans();
 }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Insurance Officers | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/tables.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2>Insurance Officers</h2>
+                <div class="page-actions"><a class="btn btn-primary" th:href="@{/officers/new}">Register Officer</a></div>
+            </div>
+            <div class="table-shell">
+                <form class="table-toolbar" method="get" th:action="@{/officers}">
+                    <div class="filter-row">
+                        <input type="search" name="search" placeholder="Search officer, ID or role" th:value="${search}" aria-label="Search officers" />
+                        <button class="btn btn-secondary" type="submit">Search</button>
+                    </div>
+                </form>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Officer ID</th><th>Full Name</th><th>Role</th><th>Contact</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        <tr th:each="officer : ${officers}">
+                            <td th:text="${officer.officerId}">OFF-001</td>
+                            <td th:text="${officer.fullName}">Officer Name</td>
+                            <td th:text="${officer.role}">Claims Officer</td>
+                            <td th:text="${officer.contact}">Contact</td>
+                            <td><div class="action-group">
+                                <a class="action-link primary" th:href="@{/officers/{id}(id=${officer.id})}">View</a>
+                                <a class="action-link" th:href="@{/officers/{id}/edit(id=${officer.id})}">Edit</a>
+                                <form th:action="@{/officers/{id}/delete(id=${officer.id})}" method="post" style="display:inline;">
+                                    <button class="action-link danger" type="submit" data-confirm-delete="Delete this officer?">Delete</button>
+                                </form>
+                            </div></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(officers)}"><td colspan="5"><div class="empty-state"><h4>No Insurance Officers found.</h4></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

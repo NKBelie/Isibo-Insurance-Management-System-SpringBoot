@@ -1,9 +1,13 @@
 package member.domain;
 
 import base.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import insurancePlan.domain.InsurancePlan;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -48,5 +52,6 @@ public class Member extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "insurance_plan_id", nullable = false)
+    @JsonBackReference
     private InsurancePlan insurancePlan;
 }

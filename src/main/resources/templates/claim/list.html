@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claims | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/tables.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2>Claims</h2>
+                <div class="page-actions" sec:authorize="hasRole('ADMIN')">
+                    <a class="btn btn-primary" th:href="@{/claims/new}">Submit Claim</a>
+                </div>
+            </div>
+            <div class="table-shell">
+                <form class="table-toolbar" method="get" th:action="@{/claims}">
+                    <div class="filter-row">
+                        <input type="search" name="search" placeholder="Search claim, member or provider"
+                               th:value="${search}" aria-label="Search claims" />
+                        <select name="status" aria-label="Filter by claim status">
+                            <option value="">All statuses</option>
+                            <option th:each="option : ${claimStatuses}" th:value="${option}" th:text="${option}"
+                                    th:selected="${#strings.equalsIgnoreCase(option, status)}">PENDING</option>
+                        </select>
+                        <button class="btn btn-secondary" type="submit">Filter</button>
+                    </div>
+                </form>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Claim ID</th><th>Member</th><th>Provider</th><th>Claim Date</th>
+                            <th>Amount</th><th>Status</th><th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="claim : ${claims}">
+                            <td th:text="${claim.claimId}">CLM-001</td>
+                            <td th:text="${claim.member.memberId + ' - ' + claim.member.firstName + ' ' + claim.member.lastName}">Member</td>
+                            <td th:text="${claim.healthcareProvider.name}">Provider</td>
+                            <td th:text="${claim.claimDate}">2026-10-01</td>
+                            <td th:text="${#numbers.formatDecimal(claim.amountClaimed, 0, 'COMMA', 0, 'POINT') + ' RWF'}">10000 RWF</td>
+                            <td><span class="status-badge" th:classappend="${claim.status == 'APPROVED' ? ' status-active' : (claim.status == 'REJECTED' ? ' status-expired' : ' status-inactive')}" th:text="${claim.status}">PENDING</span></td>
+                            <td>
+                                <div class="action-group">
+                                    <a class="action-link primary" th:href="@{/claims/{id}(id=${claim.id})}">View</a>
+                                    <a class="action-link" sec:authorize="hasRole('ADMIN')" th:if="${claim.status == 'PENDING'}"
+                                       th:href="@{/claims/{id}/edit(id=${claim.id})}">Edit</a>
+                                    <a class="action-link" sec:authorize="hasRole('OFFICER')" th:if="${claim.status == 'PENDING'}"
+                                       th:href="@{/claims/{id}/review(id=${claim.id})}">Review</a>
+                                    <form sec:authorize="hasRole('ADMIN')" th:if="${claim.status == 'PENDING'}"
+                                          th:action="@{/claims/{id}/delete(id=${claim.id})}" method="post" style="display:inline;">
+                                        <button class="action-link danger" type="submit" data-confirm-delete="Delete this pending claim?">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(claims)}">
+                            <td colspan="7"><div class="empty-state"><h4>No claims found.</h4><p>Submitted claims will appear here for review.</p></div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

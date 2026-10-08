@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface CoverageRepository
-        extends JpaRepository<Coverage, UUID> {
+public interface CoverageRepository extends JpaRepository<Coverage, UUID> {
 
     Optional<Coverage> findByCoverageId(String coverageId);
 
@@ -16,5 +15,5 @@ public interface CoverageRepository
 
     boolean existsByDescriptionIgnoreCase(String description);
 
-    List<Coverage> findByInsurancePlanId(UUID insurancePlanId);
+    List<Coverage> findByInsurancePlan_Id(UUID insurancePlanId);
 }

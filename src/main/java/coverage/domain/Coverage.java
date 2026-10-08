@@ -1,9 +1,12 @@
 package coverage.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import insurancePlan.domain.InsurancePlan;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -30,6 +33,6 @@ public class Coverage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "insurance_plan_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
     private InsurancePlan insurancePlan;
 }

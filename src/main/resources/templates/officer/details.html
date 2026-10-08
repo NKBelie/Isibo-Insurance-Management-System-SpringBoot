@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Insurance Officer Details | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2 th:text="${officer.fullName}">Insurance Officer</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/officers}">Back to officers</a>
+                    <a class="btn btn-primary" th:href="@{/officers/{id}/edit(id=${officer.id})}">Edit Officer</a>
+                </div>
+            </div>
+            <section class="card form-panel">
+                <div class="form-grid">
+                    <div class="info-tile"><span>Officer ID</span><strong th:text="${officer.officerId}">OFF-001</strong></div>
+                    <div class="info-tile"><span>Full Name</span><strong th:text="${officer.fullName}">Officer Name</strong></div>
+                    <div class="info-tile"><span>Role</span><strong th:text="${officer.role}">Claims Officer</strong></div>
+                    <div class="info-tile"><span>Contact</span><strong th:text="${officer.contact}">Contact</strong></div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

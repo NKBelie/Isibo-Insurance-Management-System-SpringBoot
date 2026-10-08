@@ -1,311 +1,254 @@
 package member.service;
 
+import exception.BusinessRuleException;
+import exception.DuplicateResourceException;
+import exception.ResourceNotFoundException;
+import exception.ValidationException;
+import claim.repository.ClaimRepository;
 import insurancePlan.domain.InsurancePlan;
 import insurancePlan.repository.InsurancePlanRepository;
 import lombok.RequiredArgsConstructor;
 import member.domain.Member;
 import member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import payment.repository.PaymentRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 @Service
 public class MemberServiceImpl implements MemberService {
 
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    );
+
     private final MemberRepository memberRepository;
     private final InsurancePlanRepository insurancePlanRepository;
+    private final ClaimRepository claimRepository;
+    private final PaymentRepository paymentRepository;
 
     @Override
-    public Member registerMember(Member theMember) {
+    @Transactional
+    public Member registerMember(Member member) {
+        validateMemberForCreate(member);
 
-        validateMemberData(theMember);
-
-        if (memberRepository.existsById(
-                theMember.getNationalId())) {
-
-            throw new RuntimeException(
-                    "Member with this National ID already exists"
-            );
+        if (memberRepository.existsById(member.getNationalId())) {
+            throw new DuplicateResourceException("National ID already exists.");
         }
 
-        if (memberRepository.existsByMemberId(
-                theMember.getMemberId())) {
-
-            throw new RuntimeException(
-                    "Member ID already exists"
-            );
+        if (memberRepository.existsByMemberId(member.getMemberId())) {
+            throw new DuplicateResourceException("Member ID already exists.");
         }
 
-        if (memberRepository.existsByEmail(
-                theMember.getEmail())) {
-
-            throw new RuntimeException(
-                    "Email already exists"
-            );
+        if (memberRepository.existsByEmailIgnoreCase(member.getEmail())) {
+            throw new DuplicateResourceException("Email already exists.");
         }
 
-        if (memberRepository.existsByPhone(
-                theMember.getPhone())) {
-
-            throw new RuntimeException(
-                    "Phone number already exists"
-            );
+        if (memberRepository.existsByPhone(member.getPhone())) {
+            throw new DuplicateResourceException("Phone number already exists.");
         }
 
-        if (theMember.getInsurancePlan() == null ||
-                theMember.getInsurancePlan().getId() == null) {
+        InsurancePlan plan = findActiveInsurancePlan(member.getInsurancePlan().getId());
+        member.setInsurancePlan(plan);
 
-            throw new RuntimeException(
-                    "Insurance Plan is required"
-            );
-        }
-
-        InsurancePlan plan =
-                insurancePlanRepository.findById(
-                        theMember.getInsurancePlan().getId()
-                ).orElseThrow(() ->
-                        new RuntimeException(
-                                "Insurance Plan not found"
-                        ));
-
-        if (!plan.getStatus().equalsIgnoreCase("ACTIVE")) {
-
-            throw new RuntimeException(
-                    "Cannot register member under an inactive plan"
-            );
-        }
-
-        theMember.setInsurancePlan(plan);
-
-        return memberRepository.save(theMember);
+        return memberRepository.save(member);
     }
 
     @Override
-    public Member updateMember(Member theMember) {
-
-        if (theMember.getNationalId() == null ||
-                theMember.getNationalId().isBlank()) {
-
-            throw new RuntimeException(
-                    "National ID is required"
-            );
+    public Member findMemberById(String nationalId) {
+        if (nationalId == null || nationalId.isBlank()) {
+            throw new ValidationException("National ID is required.");
         }
 
-        Member existing =
-                memberRepository.findById(
-                        theMember.getNationalId()
-                ).orElseThrow(() ->
-                        new RuntimeException(
-                                "Member not found"
-                        ));
-
-        validateMemberData(theMember);
-
-        if (!existing.getEmail().equalsIgnoreCase(
-                theMember.getEmail())) {
-
-            if (memberRepository.existsByEmail(
-                    theMember.getEmail())) {
-
-                throw new RuntimeException(
-                        "Email already exists"
-                );
-            }
-        }
-
-        if (!existing.getPhone().equals(
-                theMember.getPhone())) {
-
-            if (memberRepository.existsByPhone(
-                    theMember.getPhone())) {
-
-                throw new RuntimeException(
-                        "Phone number already exists"
-                );
-            }
-        }
-
-        existing.setFirstName(
-                theMember.getFirstName()
-        );
-
-        existing.setLastName(
-                theMember.getLastName()
-        );
-
-        existing.setEmail(
-                theMember.getEmail()
-        );
-
-        existing.setPhone(
-                theMember.getPhone()
-        );
-
-        existing.setDateOfBirth(
-                theMember.getDateOfBirth()
-        );
-
-        existing.setGender(
-                theMember.getGender()
-        );
-
-        existing.setAddress(
-                theMember.getAddress()
-        );
-
-        existing.setStatus(
-                theMember.getStatus()
-        );
-
-        return memberRepository.save(existing);
-    }
-
-    @Override
-    public Member deleteMember(Member theMember) {
-
-        if (theMember.getNationalId() == null ||
-                theMember.getNationalId().isBlank()) {
-
-            throw new RuntimeException(
-                    "National ID is required"
-            );
-        }
-
-        Member existing =
-                memberRepository.findById(
-                        theMember.getNationalId()
-                ).orElseThrow(() ->
-                        new RuntimeException(
-                                "Member not found"
-                        ));
-
-        memberRepository.delete(existing);
-
-        return existing;
-    }
-
-    @Override
-    public Member findMemberById(Member theMember) {
-
-        if (theMember.getNationalId() == null ||
-                theMember.getNationalId().isBlank()) {
-
-            throw new RuntimeException(
-                    "National ID is required"
-            );
-        }
-
-        return memberRepository.findById(
-                theMember.getNationalId()
-        ).orElseThrow(() ->
-                new RuntimeException(
-                        "Member not found"
-                ));
+        return memberRepository.findById(nationalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Member not found."));
     }
 
     @Override
     public List<Member> findAllMembers() {
-
         return memberRepository.findAll();
     }
 
-    private void validateMemberData(Member member) {
-
-        if (member.getNationalId() == null ||
-                member.getNationalId().isBlank()) {
-
-            throw new RuntimeException(
-                    "National ID is required"
-            );
+    @Override
+    @Transactional
+    public Member updateMember(String nationalId, Member member) {
+        if (nationalId == null || nationalId.isBlank()) {
+            throw new ValidationException("National ID is required.");
         }
 
-        if (member.getMemberId() == null ||
-                member.getMemberId().isBlank()) {
+        Member existing = findMemberById(nationalId);
 
-            throw new RuntimeException(
-                    "Member ID is required"
-            );
+        if (member.getMemberId() != null && !member.getMemberId().isBlank()) {
+            if (!member.getMemberId().equals(existing.getMemberId())
+                    && memberRepository.existsByMemberId(member.getMemberId())) {
+                throw new DuplicateResourceException("Member ID already exists.");
+            }
         }
 
-        if (member.getFirstName() == null ||
-                member.getFirstName().isBlank()) {
-
-            throw new RuntimeException(
-                    "First name is required"
-            );
+        if (member.getEmail() != null && !member.getEmail().isBlank()) {
+            if (!member.getEmail().equalsIgnoreCase(existing.getEmail())
+                    && memberRepository.existsByEmailIgnoreCase(member.getEmail())) {
+                throw new DuplicateResourceException("Email already exists.");
+            }
         }
 
-        if (member.getLastName() == null ||
-                member.getLastName().isBlank()) {
-
-            throw new RuntimeException(
-                    "Last name is required"
-            );
+        if (member.getPhone() != null && !member.getPhone().isBlank()) {
+            if (!member.getPhone().equals(existing.getPhone())
+                    && memberRepository.existsByPhone(member.getPhone())) {
+                throw new DuplicateResourceException("Phone number already exists.");
+            }
         }
 
-        if (member.getEmail() == null ||
-                member.getEmail().isBlank()) {
+        validateMemberForUpdate(member, existing);
 
-            throw new RuntimeException(
-                    "Email is required"
-            );
+        if (member.getMemberId() != null && !member.getMemberId().isBlank()) {
+            existing.setMemberId(member.getMemberId());
+        }
+        if (member.getFirstName() != null && !member.getFirstName().isBlank()) {
+            existing.setFirstName(member.getFirstName());
+        }
+        if (member.getLastName() != null && !member.getLastName().isBlank()) {
+            existing.setLastName(member.getLastName());
+        }
+        if (member.getEmail() != null && !member.getEmail().isBlank()) {
+            existing.setEmail(member.getEmail());
+        }
+        if (member.getPhone() != null && !member.getPhone().isBlank()) {
+            existing.setPhone(member.getPhone());
+        }
+        if (member.getDateOfBirth() != null) {
+            existing.setDateOfBirth(member.getDateOfBirth());
+        }
+        if (member.getGender() != null && !member.getGender().isBlank()) {
+            existing.setGender(member.getGender());
+        }
+        if (member.getAddress() != null && !member.getAddress().isBlank()) {
+            existing.setAddress(member.getAddress());
+        }
+        if (member.getStatus() != null && !member.getStatus().isBlank()) {
+            existing.setStatus(member.getStatus());
+        }
+        if (member.getInsurancePlan() != null && member.getInsurancePlan().getId() != null) {
+            existing.setInsurancePlan(findActiveInsurancePlan(member.getInsurancePlan().getId()));
         }
 
-        if (!member.getEmail().contains("@")) {
+        validateMemberState(existing);
+        return memberRepository.save(existing);
+    }
 
-            throw new RuntimeException(
-                    "Invalid email address"
-            );
+    @Override
+    @Transactional
+    public Member deleteMember(String nationalId) {
+        Member existing = findMemberById(nationalId);
+        if (claimRepository.existsByMember_NationalId(nationalId)
+                || paymentRepository.existsByMember_NationalId(nationalId)) {
+            throw new BusinessRuleException("Cannot delete a member with associated claims or payments.");
+        }
+        memberRepository.delete(existing);
+        return existing;
+    }
+
+    private void validateMemberForCreate(Member member) {
+        if (member == null) {
+            throw new ValidationException("Member data is required.");
         }
 
-        if (member.getPhone() == null ||
-                member.getPhone().isBlank()) {
+        validateMemberState(member);
 
-            throw new RuntimeException(
-                    "Phone number is required"
-            );
+        if (member.getInsurancePlan() == null || member.getInsurancePlan().getId() == null) {
+            throw new ValidationException("Insurance Plan is required.");
+        }
+    }
+
+    private void validateMemberForUpdate(Member member, Member existing) {
+        if (member == null) {
+            throw new ValidationException("Member data is required.");
+        }
+
+        if (member.getNationalId() != null && !member.getNationalId().isBlank()
+                && !member.getNationalId().equals(existing.getNationalId())) {
+            throw new BusinessRuleException("National ID cannot be changed.");
+        }
+
+        if (member.getInsurancePlan() != null && member.getInsurancePlan().getId() != null) {
+            findActiveInsurancePlan(member.getInsurancePlan().getId());
+        }
+    }
+
+    private void validateMemberState(Member member) {
+        if (member.getNationalId() == null || member.getNationalId().isBlank()) {
+            throw new ValidationException("National ID is required.");
+        }
+
+        if (member.getMemberId() == null || member.getMemberId().isBlank()) {
+            throw new ValidationException("Member ID is required.");
+        }
+
+        if (member.getFirstName() == null || member.getFirstName().isBlank()) {
+            throw new ValidationException("First name is required.");
+        }
+
+        if (member.getLastName() == null || member.getLastName().isBlank()) {
+            throw new ValidationException("Last name is required.");
+        }
+
+        if (member.getEmail() == null || member.getEmail().isBlank()) {
+            throw new ValidationException("Email is required.");
+        }
+
+        if (!EMAIL_PATTERN.matcher(member.getEmail()).matches()) {
+            throw new ValidationException("Email must be valid.");
+        }
+
+        if (member.getPhone() == null || member.getPhone().isBlank()) {
+            throw new ValidationException("Phone is required.");
         }
 
         if (member.getDateOfBirth() == null) {
-
-            throw new RuntimeException(
-                    "Date of birth is required"
-            );
+            throw new ValidationException("Date of birth is required.");
         }
 
-        if (member.getDateOfBirth().isAfter(
-                LocalDate.now())) {
-
-            throw new RuntimeException(
-                    "Date of birth cannot be in the future"
-            );
+        if (member.getDateOfBirth().isAfter(LocalDate.now())) {
+            throw new ValidationException("Date of birth cannot be in the future.");
         }
 
-        if (member.getGender() == null ||
-                member.getGender().isBlank()) {
-
-            throw new RuntimeException(
-                    "Gender is required"
-            );
+        if (member.getGender() == null || member.getGender().isBlank()) {
+            throw new ValidationException("Gender is required.");
         }
 
-        if (member.getAddress() == null ||
-                member.getAddress().isBlank()) {
-
-            throw new RuntimeException(
-                    "Address is required"
-            );
+        if (member.getAddress() == null || member.getAddress().isBlank()) {
+            throw new ValidationException("Address is required.");
         }
 
-        if (member.getStatus() == null ||
-                (!member.getStatus().equalsIgnoreCase("ACTIVE")
-                        && !member.getStatus().equalsIgnoreCase("INACTIVE"))) {
-
-            throw new RuntimeException(
-                    "Status must be ACTIVE or INACTIVE"
-            );
+        if (member.getStatus() == null || member.getStatus().isBlank()) {
+            throw new ValidationException("Status is required.");
         }
+
+        String normalizedStatus = member.getStatus().trim().toUpperCase();
+        if (!normalizedStatus.equals("ACTIVE")
+                && !normalizedStatus.equals("INACTIVE")
+                && !normalizedStatus.equals("EXPIRED")) {
+            throw new ValidationException("Member status must be ACTIVE, INACTIVE, or EXPIRED.");
+        }
+        member.setStatus(normalizedStatus);
+    }
+
+    private InsurancePlan findActiveInsurancePlan(java.util.UUID insurancePlanId) {
+        if (insurancePlanId == null) {
+            throw new ValidationException("Insurance Plan is required.");
+        }
+
+        InsurancePlan plan = insurancePlanRepository.findById(insurancePlanId)
+                .orElseThrow(() -> new ResourceNotFoundException("Insurance Plan not found."));
+
+        if (!"ACTIVE".equalsIgnoreCase(plan.getStatus())) {
+            throw new BusinessRuleException("New members can only be assigned to ACTIVE Insurance Plans.");
+        }
+
+        return plan;
     }
 }

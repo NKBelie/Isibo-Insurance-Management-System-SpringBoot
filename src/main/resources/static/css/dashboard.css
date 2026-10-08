@@ -1,0 +1,127 @@
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 16px;
+    box-shadow: var(--shadow);
+}
+
+.metric-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.metric-label {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.metric-value {
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text);
+}
+
+.metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(18, 59, 109, 0.08);
+    color: var(--primary);
+}
+
+.dashboard-panels {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 18px;
+}
+
+.panel-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 20px 20px;
+}
+
+.summary-list {
+    padding: 18px 20px 20px;
+    display: grid;
+    gap: 12px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    background: #f9fbff;
+    border-radius: 12px;
+}
+
+.summary-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-meta strong {
+    font-size: 0.98rem;
+}
+
+.summary-meta span {
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+@media (max-width: 1100px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(170px, 1fr));
+    }
+
+    .dashboard-panels {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}

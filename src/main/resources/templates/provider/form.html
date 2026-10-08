@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title th:text="${provider.id != null ? 'Edit Provider' : 'Register Provider'} + ' | ISIBO'">Register Provider | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2 th:text="${provider.id != null ? 'Edit Healthcare Provider' : 'Register Healthcare Provider'}">Register Healthcare Provider</h2>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/providers}">Back to providers</a>
+                </div>
+            </div>
+
+            <div class="form-panel">
+                <form th:action="${provider.id != null ? '/providers/' + provider.id + '/update' : '/providers'}"
+                      method="post" class="entity-form">
+                    <div class="form-grid two-columns">
+                        <div class="form-group">
+                            <label for="providerId">Provider ID</label>
+                            <input id="providerId" name="providerId" type="text" th:value="${provider.providerId}"
+                                   th:readonly="${provider.id != null}" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Provider Name</label>
+                            <input id="name" name="name" type="text" th:value="${provider.name}" maxlength="160" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="specialty">Specialty</label>
+                            <input id="specialty" name="specialty" type="text" th:value="${provider.specialty}" maxlength="120" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="contactNumber">Contact Number</label>
+                            <input id="contactNumber" name="contactNumber" type="tel" th:value="${provider.contactNumber}"
+                                   placeholder="+250..." maxlength="20" required />
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="3" maxlength="300" th:text="${provider.address}" required></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit">Save Provider</button>
+                        <a class="btn btn-secondary" th:href="@{/providers}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

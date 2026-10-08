@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Healthcare Providers | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/tables.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <h2>Healthcare Providers</h2>
+                <div class="page-actions">
+                    <a class="btn btn-primary" th:href="@{/providers/new}">Register Provider</a>
+                </div>
+            </div>
+
+            <div class="table-shell">
+                <form class="table-toolbar" method="get" th:action="@{/providers}">
+                    <div class="filter-row">
+                        <input type="search" name="search" placeholder="Search name, provider ID or specialty"
+                               th:value="${search}" aria-label="Search healthcare providers" />
+                        <select name="specialty" aria-label="Filter by specialty">
+                            <option value="">All specialties</option>
+                            <option th:each="option : ${specialties}" th:value="${option}" th:text="${option}"
+                                    th:selected="${#strings.equalsIgnoreCase(option, specialty)}">Specialty</option>
+                        </select>
+                        <button class="btn btn-secondary" type="submit">Filter</button>
+                    </div>
+                </form>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Provider ID</th>
+                            <th>Name</th>
+                            <th>Specialty</th>
+                            <th>Contact</th>
+                            <th>Address</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="provider : ${providers}">
+                            <td th:text="${provider.providerId}">PROV-001</td>
+                            <td th:text="${provider.name}">Healthcare Provider</td>
+                            <td th:text="${provider.specialty}">General</td>
+                            <td th:text="${provider.contactNumber}">+250788000000</td>
+                            <td th:text="${provider.address}">Kigali</td>
+                            <td>
+                                <div class="action-group">
+                                    <a class="action-link primary" th:href="@{/providers/{id}(id=${provider.id})}">View</a>
+                                    <a class="action-link" th:href="@{/providers/{id}/edit(id=${provider.id})}">Edit</a>
+                                    <form th:action="@{/providers/{id}/delete(id=${provider.id})}" method="post" style="display:inline;">
+                                        <button class="action-link danger" type="submit" data-confirm-delete="Delete this provider?">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(providers)}">
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <h4>No healthcare providers found.</h4>
+                                    <p>Register a provider to associate healthcare services with claims.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

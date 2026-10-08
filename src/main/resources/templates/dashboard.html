@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+    <link rel="stylesheet" th:href="@{/css/tables.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <div class="metric-head">
+                        <div>
+                            <p class="metric-label">Total Members</p>
+                            <p class="metric-value" th:text="${totalMembers}">0</p>
+                        </div>
+                        <span class="metric-icon" aria-hidden="true">MB</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-head">
+                        <div>
+                            <p class="metric-label">Active Members</p>
+                            <p class="metric-value" th:text="${activeMembers}">0</p>
+                        </div>
+                        <span class="metric-icon" aria-hidden="true">AC</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-head">
+                        <div>
+                            <p class="metric-label">Insurance Plans</p>
+                            <p class="metric-value" th:text="${totalPlans}">0</p>
+                        </div>
+                        <span class="metric-icon" aria-hidden="true">PL</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-head">
+                        <div>
+                            <p class="metric-label">Active Plans</p>
+                            <p class="metric-value" th:text="${activePlans}">0</p>
+                        </div>
+                        <span class="metric-icon" aria-hidden="true">AP</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-head">
+                        <div>
+                            <p class="metric-label">Coverage Records</p>
+                            <p class="metric-value" th:text="${totalCoverageRecords}">0</p>
+                        </div>
+                        <span class="metric-icon" aria-hidden="true">CV</span>
+                    </div>
+                </div>
+                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Total Claims</p><p class="metric-value" th:text="${totalClaims}">0</p></div><span class="metric-icon" aria-hidden="true">CL</span></div></div>
+                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Pending Claims</p><p class="metric-value" th:text="${pendingClaims}">0</p></div><span class="metric-icon" aria-hidden="true">PN</span></div></div>
+                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Approved Claims</p><p class="metric-value" th:text="${approvedClaims}">0</p></div><span class="metric-icon" aria-hidden="true">OK</span></div></div>
+                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Payments</p><p class="metric-value" th:text="${totalPayments}">0</p></div><span class="metric-icon" aria-hidden="true">PY</span></div></div>
+                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Healthcare Providers</p><p class="metric-value" th:text="${totalProviders}">0</p></div><span class="metric-icon" aria-hidden="true">HP</span></div></div>
+                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Insurance Officers</p><p class="metric-value" th:text="${totalOfficers}">0</p></div><span class="metric-icon" aria-hidden="true">IO</span></div></div>
+            </div>
+
+            <div class="dashboard-panels">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Recent Members</h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>Member ID</th>
+                                <th>Name</th>
+                                <th>Insurance Plan</th>
+                                <th>Status</th>
+                                <th>Registration</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="member : ${recentMembers}">
+                                <td th:text="${member.memberId}">MEM-001</td>
+                                <td th:text="${member.firstName + ' ' + member.lastName}">Name</td>
+                                <td th:text="${member.insurancePlan != null ? member.insurancePlan.insurancePlanName : '—'}">Plan</td>
+                                <td>
+                                    <span class="status-badge" th:classappend="${#strings.equalsIgnoreCase(member.status, 'ACTIVE')} ? ' status-active' : (${#strings.equalsIgnoreCase(member.status, 'INACTIVE')} ? ' status-inactive' : ' status-expired')"
+                                          th:text="${member.status}">ACTIVE</span>
+                                </td>
+                                <td th:text="${#temporals.format(member.registrationDate, 'yyyy-MM-dd')}">2026-10-02</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentMembers)}">
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <h4>No members found.</h4>
+                                        <p>Register your first member to get started.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div class="quick-actions">
+                        <a class="btn btn-primary" th:href="@{/members/new}">Register Member</a>
+                        <a class="btn btn-secondary" th:href="@{/insurance-plans/new}">Create Insurance Plan</a>
+                        <a class="btn btn-ghost" th:href="@{/coverages/new}">Add Coverage</a>
+                        <a class="btn btn-ghost" th:href="@{/claims/new}">Submit Claim</a>
+                        <a class="btn btn-ghost" th:href="@{/payments/new}">Record Payment</a>
+                        <a class="btn btn-ghost" th:href="@{/providers/new}">Register Provider</a>
+                    </div>
+                    <div class="dashboard-panels" style="margin-top: 18px;">
+                        <div class="panel-card">
+                            <div class="panel-header"><h3>Recent Claims</h3></div>
+                            <div class="table-wrap">
+                                <table class="data-table">
+                                    <thead><tr><th>Claim ID</th><th>Member</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+                                    <tbody>
+                                    <tr th:each="claim : ${recentClaims}">
+                                        <td><a th:href="@{/claims/{id}(id=${claim.id})}" th:text="${claim.claimId}">CLM-001</a></td>
+                                        <td th:text="${claim.member.firstName + ' ' + claim.member.lastName}">Member</td>
+                                        <td th:text="${#numbers.formatDecimal(claim.amountClaimed, 0, 'COMMA', 0, 'POINT') + ' RWF'}">10000 RWF</td>
+                                        <td th:text="${claim.status}">PENDING</td>
+                                        <td th:text="${claim.claimDate}">2026-10-01</td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(recentClaims)}"><td colspan="5"><div class="empty-state"><h4>No claims yet.</h4></div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="panel-card">
+                            <div class="panel-header"><h3>Recent Payments</h3></div>
+                            <div class="summary-list">
+                                <p><strong>Total recorded:</strong> <span th:text="${#numbers.formatDecimal(totalPaymentAmount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</span></p>
+                                <div class="summary-item" th:each="payment : ${recentPayments}">
+                                    <div class="summary-meta">
+                                        <strong th:text="${payment.paymentId + ' - ' + payment.member.memberId}">PAY-001 - MEM-001</strong>
+                                        <span th:text="${payment.paymentDate + ' | ' + payment.paymentMethod}">Date | Cash</span>
+                                    </div>
+                                    <strong th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">10000 RWF</strong>
+                                </div>
+                                <div class="empty-state" th:if="${#lists.isEmpty(recentPayments)}"><h4>No payments yet.</h4></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-panels" style="margin-top: 18px;">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Recent Insurance Plans</h3>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>Plan ID</th>
+                                <th>Plan Name</th>
+                                <th>Premium</th>
+                                <th>Coverage Limit</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="plan : ${recentPlans}">
+                                <td th:text="${plan.insurancePlanId}">PL-001</td>
+                                <td th:text="${plan.insurancePlanName}">Plan</td>
+                                <td th:text="${#numbers.formatDecimal(plan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">50000 RWF</td>
+                                <td th:text="${#numbers.formatDecimal(plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">1000000 RWF</td>
+                                <td>
+                                    <span class="status-badge" th:classappend="${#strings.equalsIgnoreCase(plan.status, 'ACTIVE')} ? ' status-active' : ' status-inactive'"
+                                          th:text="${plan.status}">ACTIVE</span>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentPlans)}">
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <h4>No insurance plans found.</h4>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3>Coverage Summary</h3>
+                    </div>
+                    <div class="summary-list">
+                        <div class="summary-item" th:each="summary : ${coverageSummary}">
+                            <div class="summary-meta">
+                                <strong th:text="${summary.plan.insurancePlanName}">Plan Name</strong>
+                                <span th:text="${summary.plan.insurancePlanId}">PLAN-001</span>
+                            </div>
+                            <div>
+                                <strong th:text="${#numbers.formatDecimal(summary.used, 0, 'COMMA', 0, 'POINT') + ' / ' + #numbers.formatDecimal(summary.plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 / 0 RWF</strong>
+                            </div>
+                        </div>
+                        <div class="empty-state" th:if="${#lists.isEmpty(coverageSummary)}">
+                            <h4>No coverage data available.</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
