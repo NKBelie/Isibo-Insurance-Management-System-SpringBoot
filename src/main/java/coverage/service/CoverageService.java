@@ -11,4 +11,5 @@ public interface CoverageService {
     Coverage deleteCoverage(UUID coverageId);
     Coverage findCoverageById(UUID coverageId);
     List<Coverage> findAllCoverage();
+    List<Coverage> findByInsurancePlanId(UUID insurancePlanId);
 }
