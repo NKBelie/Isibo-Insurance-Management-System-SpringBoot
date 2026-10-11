@@ -294,7 +294,7 @@ class IsiboInsuranceSpringBootApplicationTests {
         userRepository.save(customer);
 
         InsurancePlan plan = new InsurancePlan();
-        plan.setInsurancePlanId("PLAN-APPLICATION-PAGE");
+        plan.setInsurancePlanId("PLN-900001");
         plan.setInsurancePlanName("Application Page Health Plan");
         plan.setDescription("Active test plan for the customer application screen.");
         plan.setMonthlyPremium(15000);
@@ -349,7 +349,7 @@ class IsiboInsuranceSpringBootApplicationTests {
     @WithMockUser(username = "member-officer", roles = "INSURANCE_OFFICER")
     void officerCanCreateAndEditMembersButCannotDeleteThem() throws Exception {
         InsurancePlan plan = new InsurancePlan();
-        plan.setInsurancePlanId("OFFICER-PLAN-" + java.util.UUID.randomUUID());
+        plan.setInsurancePlanId("PLN-" + System.nanoTime());
         plan.setInsurancePlanName("Officer Member Plan " + java.util.UUID.randomUUID());
         plan.setDescription("Plan for officer member management test");
         plan.setMonthlyPremium(15000);
@@ -451,7 +451,7 @@ class IsiboInsuranceSpringBootApplicationTests {
     @WithMockUser(username = "customer", roles = "CUSTOMER")
     void customerDashboardOnlyShowsTheirOwnApplication() throws Exception {
         InsurancePlan plan = new InsurancePlan();
-        plan.setInsurancePlanId("PLAN-CUSTOMER-TEST");
+        plan.setInsurancePlanId("PLN-900002");
         plan.setInsurancePlanName("Customer Test Plan");
         plan.setDescription("Test plan");
         plan.setMonthlyPremium(10000);
@@ -460,15 +460,15 @@ class IsiboInsuranceSpringBootApplicationTests {
         plan.setStatus("ACTIVE");
         insurancePlanRepository.save(plan);
         Coverage coverage = new Coverage();
-        coverage.setCoverageId("COV-CUSTOMER-TEST");
+        coverage.setCoverageId("COV-900001");
         coverage.setDescription("Customer dashboard test coverage");
         coverage.setCoverageAmount(250000);
         coverage.setInsurancePlan(plan);
         coverageRepository.save(coverage);
 
         Member member = new Member();
-        member.setNationalId("CUSTOMER-TEST-NID");
-        member.setMemberId("MEM-CUSTOMER-TEST");
+        member.setNationalId("1199887766554401");
+        member.setMemberId("MEM-900001");
         member.setFirstName("Private");
         member.setLastName("Customer");
         member.setEmail("customer-dashboard@example.com");
@@ -481,8 +481,8 @@ class IsiboInsuranceSpringBootApplicationTests {
         memberRepository.save(member);
 
         Member otherMember = new Member();
-        otherMember.setNationalId("OTHER-TEST-NID");
-        otherMember.setMemberId("MEM-OTHER-TEST");
+        otherMember.setNationalId("1199887766554402");
+        otherMember.setMemberId("MEM-900002");
         otherMember.setFirstName("Other");
         otherMember.setLastName("Person");
         otherMember.setEmail("other-dashboard@example.com");
@@ -510,7 +510,7 @@ class IsiboInsuranceSpringBootApplicationTests {
                 .andExpect(content().string(containsString("Private Customer")))
                 .andExpect(content().string(containsString("Customer Test Plan")))
                 .andExpect(content().string(containsString("Customer dashboard test coverage")))
-                .andExpect(content().string(containsString("MEM-CUSTOMER-TEST")))
+                .andExpect(content().string(containsString("MEM-900001")))
                 .andExpect(content().string(not(containsString("Other Person"))))
                 .andExpect(content().string(not(containsString("System Users"))));
 
