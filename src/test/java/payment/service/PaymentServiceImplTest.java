@@ -1,6 +1,7 @@
 package payment.service;
 
 import exception.ValidationException;
+import base.BusinessIdGenerator;
 import member.domain.Member;
 import member.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,8 @@ class PaymentServiceImplTest {
     @Mock
     private PaymentRepository paymentRepository;
     @Mock
+    private BusinessIdGenerator businessIdGenerator;
+    @Mock
     private MemberRepository memberRepository;
 
     @InjectMocks
@@ -33,7 +36,7 @@ class PaymentServiceImplTest {
     void createShouldNormalizePaymentMethodAndResolveMember() {
         Payment payment = validPayment();
         payment.setPaymentMethod("mobile money");
-        when(paymentRepository.existsByPaymentId("PAY-1")).thenReturn(false);
+        when(businessIdGenerator.nextPaymentId()).thenReturn("PAY-001");
         when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(payment.getMember()));
         when(paymentRepository.save(payment)).thenReturn(payment);
 
@@ -46,6 +49,7 @@ class PaymentServiceImplTest {
     void createShouldRejectFuturePaymentDate() {
         Payment payment = validPayment();
         payment.setPaymentDate(LocalDate.now().plusDays(1));
+        when(businessIdGenerator.nextPaymentId()).thenReturn("PAY-001");
 
         assertThrows(ValidationException.class, () -> paymentService.create(payment));
     }
@@ -54,6 +58,7 @@ class PaymentServiceImplTest {
     void createShouldRejectUnsupportedPaymentMethod() {
         Payment payment = validPayment();
         payment.setPaymentMethod("Cryptocurrency");
+        when(businessIdGenerator.nextPaymentId()).thenReturn("PAY-001");
 
         assertThrows(ValidationException.class, () -> paymentService.create(payment));
     }
