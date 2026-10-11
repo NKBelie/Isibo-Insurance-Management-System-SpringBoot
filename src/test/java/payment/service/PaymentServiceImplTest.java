@@ -37,7 +37,7 @@ class PaymentServiceImplTest {
         Payment payment = validPayment();
         payment.setPaymentMethod("mobile money");
         when(businessIdGenerator.nextPaymentId()).thenReturn("PAY-001");
-        when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(payment.getMember()));
+        when(memberRepository.findById("1199887766554433")).thenReturn(Optional.of(payment.getMember()));
         when(paymentRepository.save(payment)).thenReturn(payment);
 
         Payment result = paymentService.create(payment);
@@ -65,10 +65,10 @@ class PaymentServiceImplTest {
 
     private Payment validPayment() {
         Member member = new Member();
-        member.setNationalId("NAT-1");
+        member.setNationalId("1199887766554433");
 
         Payment payment = new Payment();
-        payment.setPaymentId("PAY-1");
+        payment.setPaymentId("PAY-001");
         payment.setAmount(25000);
         payment.setPaymentDate(LocalDate.now());
         payment.setPaymentMethod("Cash");
