@@ -47,7 +47,7 @@ class ClaimServiceImplTest {
     void createShouldStartClaimAsPendingWithoutDecisionInformation() {
         Claim claim = validClaim();
         when(businessIdGenerator.nextClaimId()).thenReturn("CLM-001");
-        when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(claim.getMember()));
+        when(memberRepository.findById("1199887766554433")).thenReturn(Optional.of(claim.getMember()));
         when(providerRepository.findById(claim.getHealthcareProvider().getId()))
                 .thenReturn(Optional.of(claim.getHealthcareProvider()));
         when(claimRepository.save(claim)).thenReturn(claim);
@@ -64,7 +64,7 @@ class ClaimServiceImplTest {
         Claim claim = validClaim();
         claim.setAmountClaimed(1001);
         when(businessIdGenerator.nextClaimId()).thenReturn("CLM-001");
-        when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(claim.getMember()));
+        when(memberRepository.findById("1199887766554433")).thenReturn(Optional.of(claim.getMember()));
         when(providerRepository.findById(claim.getHealthcareProvider().getId()))
                 .thenReturn(Optional.of(claim.getHealthcareProvider()));
 
@@ -96,14 +96,14 @@ class ClaimServiceImplTest {
         plan.setCoverageLimit(1000);
 
         Member member = new Member();
-        member.setNationalId("NAT-1");
+        member.setNationalId("1199887766554433");
         member.setInsurancePlan(plan);
 
         HealthcareProvider provider = new HealthcareProvider();
         provider.setId(UUID.randomUUID());
 
         Claim claim = new Claim();
-        claim.setClaimId("CLM-1");
+        claim.setClaimId("CLM-001");
         claim.setClaimDate(LocalDate.now());
         claim.setDescription("Consultation");
         claim.setAmountClaimed(500);
