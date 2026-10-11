@@ -11,6 +11,7 @@ import claim.domain.Claim;
 import claim.service.ClaimService;
 import exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import coverage.domain.Coverage;
 import coverage.service.CoverageService;
@@ -34,6 +36,9 @@ import java.time.LocalDate;
 import payment.domain.Payment;
 import payment.service.PaymentService;
 import user.domain.User;
+import user.domain.SystemRole;
+import user.dto.InsuranceApplicationForm;
+import user.service.UserSessionManager;
 import user.service.UserService;
 
 @Controller
@@ -47,6 +52,7 @@ public class WebPageController {
     private final InsuranceOfficerService officerService;
     private final PaymentService paymentService;
     private final UserService userService;
+    private final UserSessionManager userSessionManager;
 
     public WebPageController(MemberService memberService,
                             InsuranceService insuranceService,
@@ -55,7 +61,8 @@ public class WebPageController {
                             ClaimService claimService,
                             InsuranceOfficerService officerService,
                             PaymentService paymentService,
-                            UserService userService) {
+                            UserService userService,
+                            UserSessionManager userSessionManager) {
         this.memberService = memberService;
         this.insuranceService = insuranceService;
         this.coverageService = coverageService;
@@ -64,6 +71,7 @@ public class WebPageController {
         this.officerService = officerService;
         this.paymentService = paymentService;
         this.userService = userService;
+        this.userSessionManager = userSessionManager;
     }
 
     @ModelAttribute("requestURI")
@@ -77,14 +85,60 @@ public class WebPageController {
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
+    public String dashboardHome(Authentication authentication) {
+        String target = authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .findFirst()
+                .map(authority -> switch (authority) {
+                    case "ROLE_ADMINISTRATOR" -> "/admin/dashboard";
+                    case "ROLE_INSURANCE_OFFICER" -> "/officer/dashboard";
+                    case "ROLE_CUSTOMER" -> "/customer/dashboard";
+                    default -> throw new IllegalStateException("Authenticated user has an unsupported role.");
+                })
+                .orElseThrow(() -> new IllegalStateException("Authenticated user has no role."));
+        return "redirect:" + target;
+    }
+
+    @GetMapping({"/admin/dashboard", "/officer/dashboard", "/customer/dashboard"})
+    public String dashboard(Model model, Authentication authentication) {
+        boolean isCustomer = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_CUSTOMER".equals(authority.getAuthority()));
+        if (isCustomer) {
+            User customer = userService.findByUsername(authentication.getName());
+            model.addAttribute("pageTitle", customer.getMember() == null ? "Apply for Insurance" : "My Insurance");
+            model.addAttribute("customerDashboard", true);
+            model.addAttribute("customerName", customer.getMember() == null
+                    ? customer.getUsername() : customer.getMember().getFirstName());
+            model.addAttribute("customerMember", customer.getMember());
+            if (customer.getMember() != null) {
+                String nationalId = customer.getMember().getNationalId();
+                model.addAttribute("customerClaims", claimService.findByMemberNationalId(nationalId).stream()
+                        .sorted(Comparator.comparing(Claim::getClaimDate).reversed())
+                        .limit(5)
+                        .toList());
+                model.addAttribute("customerPayments", paymentService.findByMemberNationalId(nationalId).stream()
+                        .sorted(Comparator.comparing(Payment::getPaymentDate).reversed())
+                        .limit(5)
+                        .toList());
+                if (customer.getMember().getInsurancePlan() != null) {
+                    model.addAttribute("customerCoverages",
+                            coverageService.findByInsurancePlanId(customer.getMember().getInsurancePlan().getId()));
+                } else {
+                    model.addAttribute("customerCoverages", List.of());
+                }
+            }
+            return "dashboard";
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMINISTRATOR".equals(authority.getAuthority()));
         List<Member> members = memberService.findAllMembers();
         List<InsurancePlan> plans = insuranceService.findAllInsurancePlans();
         List<Coverage> coverages = coverageService.findAllCoverage();
         List<Claim> claims = claimService.findAll();
         List<Payment> payments = paymentService.findAll();
-        List<HealthcareProvider> providers = providerService.findAll();
-        List<InsuranceOfficer> officers = officerService.findAll();
+        List<HealthcareProvider> providers = isAdmin ? providerService.findAll() : List.of();
+        List<InsuranceOfficer> officers = isAdmin ? officerService.findAll() : List.of();
 
         Map<UUID, Double> planCoverageUsed = coverages.stream()
                 .filter(c -> c.getInsurancePlan() != null)
@@ -105,6 +159,10 @@ public class WebPageController {
                 .toList();
 
         model.addAttribute("pageTitle", "Dashboard");
+        model.addAttribute("dashboardPath", isAdmin ? "/admin/dashboard" : "/officer/dashboard");
+        model.addAttribute("customerDashboard", false);
+        model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("dashboardRole", isAdmin ? "Administrator workspace" : "Insurance Officer workspace");
         model.addAttribute("totalMembers", members.size());
         model.addAttribute("activeMembers", members.stream().filter(m -> "ACTIVE".equalsIgnoreCase(m.getStatus())).count());
         model.addAttribute("totalPlans", plans.size());
@@ -117,9 +175,19 @@ public class WebPageController {
         model.addAttribute("totalPaymentAmount", payments.stream().mapToDouble(Payment::getAmount).sum());
         model.addAttribute("totalProviders", providers.size());
         model.addAttribute("totalOfficers", officers.size());
+        model.addAttribute("pendingApplications", members.stream()
+                .filter(member -> "PENDING".equalsIgnoreCase(member.getStatus())).count());
+        if (isAdmin) {
+            model.addAttribute("totalUsers", userService.findAllUsers().size());
+        }
         model.addAttribute("recentClaims", claims.stream().sorted(Comparator.comparing(Claim::getClaimDate).reversed()).limit(5).toList());
         model.addAttribute("recentPayments", payments.stream().sorted(Comparator.comparing(Payment::getPaymentDate).reversed()).limit(5).toList());
-        model.addAttribute("recentMembers", members.stream().sorted(Comparator.comparing(Member::getMemberId).reversed()).limit(5).toList());
+        model.addAttribute("recentMembers", members.stream()
+                .sorted(Comparator.comparing(
+                        Member::getRegistrationDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(5)
+                .toList());
         model.addAttribute("recentPlans", plans.stream().sorted(Comparator.comparing(InsurancePlan::getInsurancePlanName)).limit(5).toList());
         model.addAttribute("coverageSummary", coverageSummary);
         model.addAttribute("members", members);
@@ -128,20 +196,102 @@ public class WebPageController {
         return "dashboard";
     }
 
+    @GetMapping("/reports")
+    public String reports(Model model) {
+        List<Member> members = memberService.findAllMembers();
+        List<InsurancePlan> plans = insuranceService.findAllInsurancePlans();
+        List<Claim> claims = claimService.findAll();
+        List<Payment> payments = paymentService.findAll();
+
+        Map<String, Long> memberStatuses = members.stream()
+                .collect(Collectors.groupingBy(
+                        member -> member.getStatus().toUpperCase(),
+                        java.util.TreeMap::new,
+                        Collectors.counting()));
+        Map<String, Long> claimStatuses = claims.stream()
+                .collect(Collectors.groupingBy(
+                        claim -> claim.getStatus().toUpperCase(),
+                        java.util.TreeMap::new,
+                        Collectors.counting()));
+        Map<UUID, Long> membersByPlan = members.stream()
+                .filter(member -> member.getInsurancePlan() != null)
+                .collect(Collectors.groupingBy(member -> member.getInsurancePlan().getId(), Collectors.counting()));
+
+        model.addAttribute("pageTitle", "Reports");
+        model.addAttribute("reportMemberStatuses", memberStatuses);
+        model.addAttribute("reportClaimStatuses", claimStatuses);
+        model.addAttribute("reportPlans", plans.stream()
+                .sorted(Comparator.comparing(InsurancePlan::getInsurancePlanName))
+                .map(plan -> {
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("plan", plan);
+                    item.put("memberCount", membersByPlan.getOrDefault(plan.getId(), 0L));
+                    return item;
+                })
+                .toList());
+        model.addAttribute("reportMemberCount", members.size());
+        model.addAttribute("reportClaimCount", claims.size());
+        model.addAttribute("reportPaymentCount", payments.size());
+        model.addAttribute("reportPaymentTotal", payments.stream().mapToDouble(Payment::getAmount).sum());
+        model.addAttribute("reportLatestPayments", payments.stream()
+                .sorted(Comparator.comparing(Payment::getPaymentDate).reversed())
+                .limit(10)
+                .toList());
+        return "reports";
+    }
+
+    @GetMapping("/insurance-application")
+    public String insuranceApplication(Model model, Authentication authentication) {
+        User customer = userService.findByUsername(authentication.getName());
+        if (customer.getMember() != null) {
+            return "redirect:/dashboard";
+        }
+        model.addAttribute("pageTitle", "Insurance Application");
+        model.addAttribute("application", new InsuranceApplicationForm());
+        model.addAttribute("accountEmail", customer.getEmail());
+        model.addAttribute("insurancePlans", insuranceService.findAllInsurancePlans().stream()
+                .filter(plan -> "ACTIVE".equalsIgnoreCase(plan.getStatus()))
+                .toList());
+        return "customer/application";
+    }
+
+    @PostMapping("/insurance-application")
+    public String submitInsuranceApplication(
+            @ModelAttribute("application") InsuranceApplicationForm application,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        try {
+            userService.submitCustomerApplication(authentication.getName(), application);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Your insurance application was submitted and is pending review.");
+            return "redirect:/dashboard";
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            redirectAttributes.addFlashAttribute("application", application);
+            return "redirect:/insurance-application";
+        }
+    }
+
     @GetMapping("/members")
     public String listMembers(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
             Model model) {
 
         List<Member> members = memberService.findAllMembers();
-        List<Member> filtered = filterMembers(members, search, status);
+        List<Member> filtered = filterMembers(members, search, status).stream()
+                .sorted(Comparator.comparing(
+                        Member::getRegistrationDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
 
         model.addAttribute("pageTitle", "Members");
-        model.addAttribute("members", filtered);
+        model.addAttribute("members", paginateResults(filtered, page, "/members",
+                paginationFilters("search", search, "status", status), model));
         model.addAttribute("search", search);
         model.addAttribute("status", status);
-        model.addAttribute("statuses", List.of("ACTIVE", "INACTIVE", "EXPIRED"));
+        model.addAttribute("statuses", List.of("PENDING", "ACTIVE", "INACTIVE", "REJECTED", "EXPIRED"));
         return "member/list";
     }
 
@@ -222,16 +372,24 @@ public class WebPageController {
     public String listInsurancePlans(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
             Model model) {
 
         List<InsurancePlan> plans = insuranceService.findAllInsurancePlans();
-        List<InsurancePlan> filtered = filterPlans(plans, search, status);
+        List<InsurancePlan> filtered = filterPlans(plans, search, status).stream()
+                .sorted(Comparator.comparing(InsurancePlan::getInsurancePlanName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
 
         model.addAttribute("pageTitle", "Insurance Plans");
-        model.addAttribute("insurancePlans", filtered);
+        model.addAttribute("insurancePlans", paginateResults(filtered, page, "/insurance-plans",
+                paginationFilters("search", search, "status", status), model));
         model.addAttribute("search", search);
         model.addAttribute("status", status);
         model.addAttribute("statuses", List.of("ACTIVE", "INACTIVE"));
+        model.addAttribute("activePlanCount", plans.stream()
+                .filter(plan -> "ACTIVE".equalsIgnoreCase(plan.getStatus())).count());
+        model.addAttribute("inactivePlanCount", plans.stream()
+                .filter(plan -> "INACTIVE".equalsIgnoreCase(plan.getStatus())).count());
         return "insurancePlan/list";
     }
 
@@ -244,14 +402,15 @@ public class WebPageController {
 
     @PostMapping("/insurance-plans")
     public String createInsurancePlan(@ModelAttribute("insurancePlan") InsurancePlan insurancePlan,
+                                     Model model,
                                      RedirectAttributes redirectAttributes) {
         try {
             insuranceService.registerInsurance(insurancePlan);
             redirectAttributes.addFlashAttribute("successMessage", "Insurance plan created successfully.");
             return "redirect:/insurance-plans";
         } catch (RuntimeException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            return "redirect:/insurance-plans/new";
+            modelForPlanForm(model, insurancePlan, "Create Insurance Plan", ex.getMessage());
+            return "insurancePlan/form";
         }
     }
 
@@ -265,6 +424,8 @@ public class WebPageController {
         model.addAttribute("insurancePlan", insurancePlan);
         model.addAttribute("members", members);
         model.addAttribute("coverages", coverages);
+        model.addAttribute("memberCount", members.size());
+        model.addAttribute("coverageCount", coverages.size());
         return "insurancePlan/details";
     }
 
@@ -279,14 +440,25 @@ public class WebPageController {
     @PostMapping("/insurance-plans/{id}/update")
     public String updateInsurancePlan(@PathVariable UUID id,
                                      @ModelAttribute("insurancePlan") InsurancePlan insurancePlan,
+                                     Model model,
                                      RedirectAttributes redirectAttributes) {
         try {
+            if (insurancePlan.getMonthlyPremium() <= 0) {
+                throw new ValidationException("Monthly premium must be greater than zero.");
+            }
+            if (insurancePlan.getCoverageLimit() <= 0) {
+                throw new ValidationException("Coverage limit must be greater than zero.");
+            }
+            if (insurancePlan.getDurationMonths() <= 0) {
+                throw new ValidationException("Duration must be greater than zero.");
+            }
             insuranceService.updateInsurance(id, insurancePlan);
             redirectAttributes.addFlashAttribute("successMessage", "Insurance plan updated successfully.");
             return "redirect:/insurance-plans/" + id;
         } catch (RuntimeException ex) {
-            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            return "redirect:/insurance-plans/" + id + "/edit";
+            insurancePlan.setId(id);
+            modelForPlanForm(model, insurancePlan, "Edit Insurance Plan", ex.getMessage());
+            return "insurancePlan/form";
         }
     }
 
@@ -299,20 +471,30 @@ public class WebPageController {
             return "redirect:/insurance-plans";
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            return "redirect:/insurance-plans";
+            return "redirect:/insurance-plans/" + id;
         }
+    }
+
+    private void modelForPlanForm(Model model, InsurancePlan insurancePlan, String pageTitle, String errorMessage) {
+        model.addAttribute("pageTitle", pageTitle);
+        model.addAttribute("insurancePlan", insurancePlan);
+        model.addAttribute("errorMessage", errorMessage);
     }
 
     @GetMapping("/coverages")
     public String listCoverages(
             @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
             Model model) {
 
         List<Coverage> coverages = coverageService.findAllCoverage();
-        List<Coverage> filtered = filterCoverages(coverages, search);
+        List<Coverage> filtered = filterCoverages(coverages, search).stream()
+                .sorted(Comparator.comparing(Coverage::getCoverageId, String.CASE_INSENSITIVE_ORDER))
+                .toList();
 
         model.addAttribute("pageTitle", "Coverage");
-        model.addAttribute("coverages", filtered);
+        model.addAttribute("coverages", paginateResults(filtered, page, "/coverages",
+                paginationFilters("search", search), model));
         model.addAttribute("search", search);
         return "coverage/list";
     }
@@ -403,6 +585,7 @@ public class WebPageController {
     @GetMapping("/providers")
     public String listProviders(@RequestParam(required = false) String search,
                                 @RequestParam(required = false) String specialty,
+                                @RequestParam(defaultValue = "0") int page,
                                 Model model) {
         List<HealthcareProvider> providers = providerService.findAll();
         String keyword = search == null ? "" : search.trim().toLowerCase();
@@ -414,10 +597,12 @@ public class WebPageController {
                         || provider.getProviderId().toLowerCase().contains(keyword)
                         || provider.getName().toLowerCase().contains(keyword)
                         || provider.getSpecialty().toLowerCase().contains(keyword))
+                .sorted(Comparator.comparing(HealthcareProvider::getName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
 
         model.addAttribute("pageTitle", "Healthcare Providers");
-        model.addAttribute("providers", filtered);
+        model.addAttribute("providers", paginateResults(filtered, page, "/providers",
+                paginationFilters("search", search, "specialty", specialty), model));
         model.addAttribute("search", search);
         model.addAttribute("specialty", specialty);
         model.addAttribute("specialties", providers.stream()
@@ -490,6 +675,7 @@ public class WebPageController {
     @GetMapping("/claims")
     public String listClaims(@RequestParam(required = false) String search,
                              @RequestParam(required = false) String status,
+                             @RequestParam(defaultValue = "0") int page,
                              Model model) {
         String keyword = search == null ? "" : search.trim().toLowerCase();
         String selectedStatus = status == null ? "" : status.trim();
@@ -501,9 +687,11 @@ public class WebPageController {
                         || (claim.getMember().getFirstName() + " " + claim.getMember().getLastName())
                                 .toLowerCase().contains(keyword)
                         || claim.getHealthcareProvider().getName().toLowerCase().contains(keyword))
+                .sorted(Comparator.comparing(Claim::getClaimDate, Comparator.reverseOrder()))
                 .toList();
         model.addAttribute("pageTitle", "Claims");
-        model.addAttribute("claims", filtered);
+        model.addAttribute("claims", paginateResults(filtered, page, "/claims",
+                paginationFilters("search", search, "status", status), model));
         model.addAttribute("search", search);
         model.addAttribute("status", status);
         model.addAttribute("claimStatuses", List.of("PENDING", "APPROVED", "REJECTED"));
@@ -599,16 +787,20 @@ public class WebPageController {
     }
 
     @GetMapping("/officers")
-    public String listOfficers(@RequestParam(required = false) String search, Model model) {
+    public String listOfficers(@RequestParam(required = false) String search,
+                               @RequestParam(defaultValue = "0") int page,
+                               Model model) {
         String keyword = search == null ? "" : search.trim().toLowerCase();
         List<InsuranceOfficer> officers = officerService.findAll().stream()
                 .filter(officer -> keyword.isEmpty()
                         || officer.getOfficerId().toLowerCase().contains(keyword)
                         || officer.getFullName().toLowerCase().contains(keyword)
                         || officer.getRole().toLowerCase().contains(keyword))
+                .sorted(Comparator.comparing(InsuranceOfficer::getFullName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
         model.addAttribute("pageTitle", "Insurance Officers");
-        model.addAttribute("officers", officers);
+        model.addAttribute("officers", paginateResults(officers, page, "/officers",
+                paginationFilters("search", search), model));
         model.addAttribute("search", search);
         return "officer/list";
     }
@@ -673,7 +865,9 @@ public class WebPageController {
     }
 
     @GetMapping("/payments")
-    public String listPayments(@RequestParam(required = false) String search, Model model) {
+    public String listPayments(@RequestParam(required = false) String search,
+                               @RequestParam(defaultValue = "0") int page,
+                               Model model) {
         String keyword = search == null ? "" : search.trim().toLowerCase();
         List<Payment> payments = paymentService.findAll().stream()
                 .filter(payment -> keyword.isEmpty()
@@ -685,7 +879,8 @@ public class WebPageController {
                 .sorted(Comparator.comparing(Payment::getPaymentDate).reversed())
                 .toList();
         model.addAttribute("pageTitle", "Payments");
-        model.addAttribute("payments", payments);
+        model.addAttribute("payments", paginateResults(payments, page, "/payments",
+                paginationFilters("search", search), model));
         model.addAttribute("search", search);
         model.addAttribute("totalPaymentAmount", payments.stream().mapToDouble(Payment::getAmount).sum());
         return "payment/list";
@@ -755,9 +950,32 @@ public class WebPageController {
     }
 
     @GetMapping("/users")
-    public String listUsers(Model model) {
+    public String listUsers(@RequestParam(required = false) String search,
+                            @RequestParam(required = false) String role,
+                            @RequestParam(defaultValue = "0") int page,
+                            Model model) {
+        String keyword = search == null ? "" : search.trim().toLowerCase();
+        String selectedRole = role == null ? "" : role.trim();
+        List<User> users = userService.findAllUsers().stream()
+                .filter(user -> selectedRole.isEmpty()
+                        || SystemRole.from(selectedRole) == SystemRole.from(user.getRole()))
+                .filter(user -> keyword.isEmpty()
+                        || user.getUsername().toLowerCase().contains(keyword)
+                        || user.getEmail().toLowerCase().contains(keyword)
+                        || user.getRole().toLowerCase().contains(keyword))
+                .sorted(Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER))
+                .toList();
         model.addAttribute("pageTitle", "System Users");
-        model.addAttribute("users", userService.findAllUsers());
+        model.addAttribute("users", paginateResults(users, page, "/users",
+                paginationFilters("search", search, "role", role), model));
+        model.addAttribute("userRoleLabels", users.stream()
+                .collect(Collectors.toMap(User::getId, user -> SystemRole.from(user.getRole()).label())));
+        model.addAttribute("userCanDelete", users.stream()
+                .collect(Collectors.toMap(User::getId,
+                        user -> SystemRole.from(user.getRole()) != SystemRole.CUSTOMER)));
+        model.addAttribute("search", search);
+        model.addAttribute("role", role);
+        model.addAttribute("userRoles", userRoleOptions());
         return "user/list";
     }
 
@@ -765,6 +983,7 @@ public class WebPageController {
     public String newUserForm(Model model) {
         model.addAttribute("pageTitle", "Create System User");
         model.addAttribute("user", new User());
+        model.addAttribute("userRoles", userRoleOptions());
         return "user/form";
     }
 
@@ -790,14 +1009,19 @@ public class WebPageController {
     @GetMapping("/users/{id}")
     public String userDetails(@PathVariable UUID id, Model model) {
         model.addAttribute("pageTitle", "User Details");
-        model.addAttribute("user", userService.findById(id));
+        User user = userService.findById(id);
+        model.addAttribute("user", user);
+        model.addAttribute("roleLabel", SystemRole.from(user.getRole()).label());
         return "user/details";
     }
 
     @GetMapping("/users/{id}/edit")
     public String editUserForm(@PathVariable UUID id, Model model) {
         model.addAttribute("pageTitle", "Edit System User");
-        model.addAttribute("user", userService.findById(id));
+        User user = userService.findById(id);
+        model.addAttribute("user", user);
+        model.addAttribute("currentRole", SystemRole.from(user.getRole()).name());
+        model.addAttribute("userRoles", userRoleOptions());
         return "user/form";
     }
 
@@ -805,13 +1029,21 @@ public class WebPageController {
     public String updateUser(@PathVariable UUID id,
                              @ModelAttribute("user") User user,
                              @RequestParam(required = false) String passwordConfirmation,
+                             Authentication authentication,
                              RedirectAttributes redirectAttributes) {
         try {
+            User existing = userService.findById(id);
+            if (existing.getUsername().equals(authentication.getName())) {
+                throw new ValidationException("You cannot change your own account role or profile from user management.");
+            }
             if (user.getPasswordHash() != null && !user.getPasswordHash().isBlank()
                     && !user.getPasswordHash().equals(passwordConfirmation)) {
                 throw new ValidationException("Password confirmation does not match.");
             }
-            userService.updateUser(id, user);
+            User updated = userService.updateUser(id, user);
+            if (SystemRole.from(existing.getRole()) != SystemRole.from(updated.getRole())) {
+                userSessionManager.expireSessions(existing.getUsername());
+            }
             redirectAttributes.addFlashAttribute("successMessage", "User updated successfully.");
             return "redirect:/users/" + id;
         } catch (RuntimeException ex) {
@@ -820,6 +1052,12 @@ public class WebPageController {
             redirectAttributes.addFlashAttribute("user", user);
             return "redirect:/users/" + id + "/edit";
         }
+    }
+
+    private List<Map<String, String>> userRoleOptions() {
+        return java.util.Arrays.stream(SystemRole.values())
+                .map(role -> Map.of("value", role.name(), "label", role.label()))
+                .toList();
     }
 
     @PostMapping("/users/{id}/delete")
@@ -831,6 +1069,51 @@ public class WebPageController {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
         return "redirect:/users";
+    }
+
+    private <T> List<T> paginateResults(List<T> results,
+                                       int requestedPage,
+                                       String path,
+                                       Map<String, String> filters,
+                                       Model model) {
+        int pageSize = 20;
+        int totalPages = Math.max(1, (results.size() + pageSize - 1) / pageSize);
+        int currentPage = Math.max(0, Math.min(requestedPage, totalPages - 1));
+        int startIndex = currentPage * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, results.size());
+
+        model.addAttribute("filteredCount", results.size());
+        model.addAttribute("pageStart", results.isEmpty() ? 0 : startIndex + 1);
+        model.addAttribute("pageEnd", endIndex);
+        model.addAttribute("currentPage", currentPage + 1);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("hasPreviousPage", currentPage > 0);
+        model.addAttribute("hasNextPage", currentPage + 1 < totalPages);
+        if (currentPage > 0) {
+            model.addAttribute("previousPageUrl", paginationUrl(path, currentPage - 1, filters));
+        }
+        if (currentPage + 1 < totalPages) {
+            model.addAttribute("nextPageUrl", paginationUrl(path, currentPage + 1, filters));
+        }
+        return results.subList(startIndex, endIndex);
+    }
+
+    private String paginationUrl(String path, int page, Map<String, String> filters) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath(path).queryParam("page", page);
+        filters.forEach((name, value) -> {
+            if (value != null && !value.isBlank()) {
+                builder.queryParam(name, value);
+            }
+        });
+        return builder.build().encode().toUriString();
+    }
+
+    private Map<String, String> paginationFilters(String... nameValues) {
+        Map<String, String> filters = new LinkedHashMap<>();
+        for (int index = 0; index + 1 < nameValues.length; index += 2) {
+            filters.put(nameValues[index], nameValues[index + 1]);
+        }
+        return filters;
     }
 
     private List<Member> filterMembers(List<Member> members, String search, String status) {
@@ -871,8 +1154,10 @@ public class WebPageController {
 
                     String planId = plan.getInsurancePlanId() == null ? "" : plan.getInsurancePlanId();
                     String planName = plan.getInsurancePlanName() == null ? "" : plan.getInsurancePlanName();
+                    String description = plan.getDescription() == null ? "" : plan.getDescription();
                     return planId.toLowerCase().contains(keyword)
-                            || planName.toLowerCase().contains(keyword);
+                            || planName.toLowerCase().contains(keyword)
+                            || description.toLowerCase().contains(keyword);
                 })
                 .collect(Collectors.toList());
     }
