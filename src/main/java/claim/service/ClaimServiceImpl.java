@@ -2,6 +2,7 @@ package claim.service;
 
 import claim.domain.Claim;
 import claim.repository.ClaimRepository;
+import base.BusinessIdGenerator;
 import exception.BusinessRuleException;
 import exception.DuplicateResourceException;
 import exception.ResourceNotFoundException;
@@ -29,6 +30,7 @@ public class ClaimServiceImpl implements ClaimService {
     private static final String REJECTED = "REJECTED";
 
     private final ClaimRepository claimRepository;
+    private final BusinessIdGenerator businessIdGenerator;
     private final MemberRepository memberRepository;
     private final HealthcareProviderRepository providerRepository;
     private final InsuranceOfficerRepository officerRepository;
@@ -36,17 +38,16 @@ public class ClaimServiceImpl implements ClaimService {
     @Override
     @Transactional
     public Claim create(Claim claim) {
-        validateClaim(claim, true);
-        claim.setClaimId(claim.getClaimId().trim());
-        if (claimRepository.existsByClaimId(claim.getClaimId())) {
-            throw new DuplicateResourceException("Claim ID already exists.");
+        if (claim == null) {
+            throw new ValidationException("Claim data is required.");
         }
+        claim.setClaimId(businessIdGenerator.nextClaimId());
+        validateClaim(claim, false);
 
         Member member = findMember(claim.getMember());
         HealthcareProvider provider = findProvider(claim.getHealthcareProvider());
         validateAmountAgainstPlan(claim.getAmountClaimed(), member);
 
-        claim.setClaimId(claim.getClaimId().trim());
         claim.setDescription(claim.getDescription().trim());
         claim.setStatus(PENDING);
         claim.setDecisionDate(null);
@@ -70,6 +71,15 @@ public class ClaimServiceImpl implements ClaimService {
     @Transactional(readOnly = true)
     public List<Claim> findAll() {
         return claimRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Claim> findByMemberNationalId(String nationalId) {
+        if (nationalId == null || nationalId.isBlank()) {
+            throw new ValidationException("Member national ID is required.");
+        }
+        return claimRepository.findByMember_NationalId(nationalId);
     }
 
     @Override
@@ -143,9 +153,6 @@ public class ClaimServiceImpl implements ClaimService {
     private void validateClaim(Claim claim, boolean requireClaimId) {
         if (claim == null) {
             throw new ValidationException("Claim data is required.");
-        }
-        if (requireClaimId && (claim.getClaimId() == null || claim.getClaimId().isBlank())) {
-            throw new ValidationException("Claim ID is required.");
         }
         if (claim.getClaimDate() == null) {
             throw new ValidationException("Claim date is required.");
