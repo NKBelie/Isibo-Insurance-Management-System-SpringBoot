@@ -2,6 +2,7 @@ package claim.service;
 
 import claim.domain.Claim;
 import claim.repository.ClaimRepository;
+import base.BusinessIdGenerator;
 import exception.BusinessRuleException;
 import healthcareProvider.domain.HealthcareProvider;
 import healthcareProvider.repository.HealthcareProviderRepository;
@@ -31,6 +32,8 @@ class ClaimServiceImplTest {
     @Mock
     private ClaimRepository claimRepository;
     @Mock
+    private BusinessIdGenerator businessIdGenerator;
+    @Mock
     private MemberRepository memberRepository;
     @Mock
     private HealthcareProviderRepository providerRepository;
@@ -43,7 +46,7 @@ class ClaimServiceImplTest {
     @Test
     void createShouldStartClaimAsPendingWithoutDecisionInformation() {
         Claim claim = validClaim();
-        when(claimRepository.existsByClaimId("CLM-1")).thenReturn(false);
+        when(businessIdGenerator.nextClaimId()).thenReturn("CLM-001");
         when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(claim.getMember()));
         when(providerRepository.findById(claim.getHealthcareProvider().getId()))
                 .thenReturn(Optional.of(claim.getHealthcareProvider()));
@@ -60,7 +63,7 @@ class ClaimServiceImplTest {
     void createShouldRejectClaimAbovePlanCoverageLimit() {
         Claim claim = validClaim();
         claim.setAmountClaimed(1001);
-        when(claimRepository.existsByClaimId("CLM-1")).thenReturn(false);
+        when(businessIdGenerator.nextClaimId()).thenReturn("CLM-001");
         when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(claim.getMember()));
         when(providerRepository.findById(claim.getHealthcareProvider().getId()))
                 .thenReturn(Optional.of(claim.getHealthcareProvider()));
