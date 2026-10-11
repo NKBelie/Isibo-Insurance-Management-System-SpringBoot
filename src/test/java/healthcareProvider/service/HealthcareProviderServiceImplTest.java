@@ -61,7 +61,7 @@ class HealthcareProviderServiceImplTest {
 
     private HealthcareProvider validProvider() {
         HealthcareProvider provider = new HealthcareProvider();
-        provider.setProviderId("PROV-1");
+        provider.setProviderId("HCP-001");
         provider.setName("Kigali Hospital");
         provider.setAddress("Kigali");
         provider.setContactNumber("+250788123456");
