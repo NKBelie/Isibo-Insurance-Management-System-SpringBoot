@@ -22,11 +22,6 @@
                 <form th:action="${officer.id != null ? '/officers/' + officer.id + '/update' : '/officers'}" method="post">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="officerId">Officer ID</label>
-                            <input id="officerId" name="officerId" type="text" th:value="${officer.officerId}"
-                                   th:readonly="${officer.id != null}" required />
-                        </div>
-                        <div class="form-group">
                             <label for="fullName">Full Name</label>
                             <input id="fullName" name="fullName" type="text" th:value="${officer.fullName}" required />
                         </div>
