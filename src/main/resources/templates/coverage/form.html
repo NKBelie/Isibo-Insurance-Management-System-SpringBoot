@@ -26,10 +26,6 @@
                 <form th:action="${coverage.id != null ? '/coverages/' + coverage.id + '/update' : '/coverages'}" method="post" class="entity-form">
                     <div class="form-grid two-columns">
                         <div class="field-group">
-                            <label for="coverageId">Coverage ID</label>
-                            <input id="coverageId" name="coverageId" type="text" th:value="${coverage.coverageId}" required />
-                        </div>
-                        <div class="field-group">
                             <label for="insurancePlanId">Insurance Plan</label>
                             <select id="insurancePlanId" name="insurancePlan.id" required>
                                 <option value="">Select a plan</option>
