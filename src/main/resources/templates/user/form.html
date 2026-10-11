@@ -32,8 +32,8 @@
                         <div class="form-group">
                             <label for="role">Role</label>
                             <select id="role" name="role" required>
-                                <option value="Administrator" th:selected="${user.role == 'Administrator'}">Administrator</option>
-                                <option value="Insurance Officer" th:selected="${user.role == 'Insurance Officer'}">Insurance Officer</option>
+                                <option th:each="option : ${userRoles}" th:value="${option.value}" th:text="${option.label}"
+                                        th:selected="${currentRole == option.value or user.role == option.value}">Customer</option>
                             </select>
                         </div>
                         <div class="form-group">
