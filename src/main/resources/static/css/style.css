@@ -233,6 +233,8 @@ button, input, select, textarea {
 
 .page-content {
     padding: 26px;
+    max-width: 1360px;
+    margin: 0 auto;
 }
 
 .alert-stack {
