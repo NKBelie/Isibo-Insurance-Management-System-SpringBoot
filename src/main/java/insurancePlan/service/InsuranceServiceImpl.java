@@ -4,6 +4,7 @@ import exception.BusinessRuleException;
 import exception.DuplicateResourceException;
 import exception.ResourceNotFoundException;
 import exception.ValidationException;
+import base.BusinessIdGenerator;
 import insurancePlan.domain.InsurancePlan;
 import insurancePlan.repository.InsurancePlanRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +19,16 @@ import java.util.UUID;
 public class InsuranceServiceImpl implements InsuranceService {
 
     private final InsurancePlanRepository insurancePlanRepository;
+    private final BusinessIdGenerator businessIdGenerator;
 
     @Override
     @Transactional
     public InsurancePlan registerInsurance(InsurancePlan insurancePlan) {
-        validatePlanForCreate(insurancePlan);
-
-        if (insurancePlanRepository.existsByInsurancePlanId(insurancePlan.getInsurancePlanId())) {
-            throw new DuplicateResourceException("Insurance Plan ID already exists.");
+        if (insurancePlan == null) {
+            throw new ValidationException("Insurance Plan data is required.");
         }
+        insurancePlan.setInsurancePlanId(businessIdGenerator.nextPlanId());
+        validatePlanForCreate(insurancePlan);
 
         if (insurancePlanRepository.existsByInsurancePlanNameIgnoreCase(insurancePlan.getInsurancePlanName())) {
             throw new DuplicateResourceException("Insurance Plan name already exists.");
@@ -117,9 +119,6 @@ public class InsuranceServiceImpl implements InsuranceService {
     private void validatePlanForCreate(InsurancePlan insurancePlan) {
         if (insurancePlan == null) {
             throw new ValidationException("Insurance Plan data is required.");
-        }
-        if (insurancePlan.getInsurancePlanId() == null || insurancePlan.getInsurancePlanId().isBlank()) {
-            throw new ValidationException("Insurance Plan ID is required.");
         }
         if (insurancePlan.getInsurancePlanName() == null || insurancePlan.getInsurancePlanName().isBlank()) {
             throw new ValidationException("Insurance Plan name is required.");
