@@ -34,14 +34,14 @@ class CoverageServiceImplTest {
     void updateCoverageShouldRejectAmountThatExceedsPlanLimitOnSamePlan() {
         InsurancePlan plan = new InsurancePlan();
         plan.setId(UUID.randomUUID());
-        plan.setInsurancePlanId("PLAN-100");
+        plan.setInsurancePlanId("PLN-100");
         plan.setInsurancePlanName("Gold");
         plan.setStatus("ACTIVE");
         plan.setCoverageLimit(500);
 
         Coverage existing = new Coverage();
         existing.setId(UUID.randomUUID());
-        existing.setCoverageId("COVERAGE-1");
+        existing.setCoverageId("COV-001");
         existing.setDescription("Hospitalization");
         existing.setCoverageAmount(300);
         existing.setInsurancePlan(plan);
