@@ -74,7 +74,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="plan : ${insurancePlans}">
-                            <td th:text="${plan.insurancePlanId}">PLAN-001</td>
+                            <td th:text="${plan.insurancePlanId}">PLN-001</td>
                             <td th:text="${plan.insurancePlanName}">Basic Plan</td>
                             <td th:text="${#numbers.formatDecimal(plan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">100000 RWF</td>
                             <td th:text="${#numbers.formatDecimal(plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">5000000 RWF</td>
