@@ -3,6 +3,7 @@ package payment.service;
 import exception.DuplicateResourceException;
 import exception.ResourceNotFoundException;
 import exception.ValidationException;
+import base.BusinessIdGenerator;
 import lombok.RequiredArgsConstructor;
 import member.domain.Member;
 import member.repository.MemberRepository;
@@ -25,16 +26,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;
+    private final BusinessIdGenerator businessIdGenerator;
 
     @Override
     @Transactional
     public Payment create(Payment payment) {
-        validate(payment, true);
-        String paymentId = payment.getPaymentId().trim();
-        if (paymentRepository.existsByPaymentId(paymentId)) {
-            throw new DuplicateResourceException("Payment ID already exists.");
+        if (payment == null) {
+            throw new ValidationException("Payment data is required.");
         }
-        payment.setPaymentId(paymentId);
+        payment.setPaymentId(businessIdGenerator.nextPaymentId());
+        validate(payment);
         payment.setPaymentMethod(normalizeMethod(payment.getPaymentMethod()));
         payment.setMember(findMember(payment.getMember()));
         return paymentRepository.save(payment);
@@ -54,6 +55,15 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     public List<Payment> findAll() {
         return paymentRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Payment> findByMemberNationalId(String nationalId) {
+        if (nationalId == null || nationalId.isBlank()) {
+            throw new ValidationException("Member national ID is required.");
+        }
+        return paymentRepository.findByMember_NationalId(nationalId);
     }
 
     @Override
@@ -93,12 +103,9 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.delete(findById(id));
     }
 
-    private void validate(Payment payment, boolean requirePaymentId) {
+    private void validate(Payment payment) {
         if (payment == null) {
             throw new ValidationException("Payment data is required.");
-        }
-        if (requirePaymentId && (payment.getPaymentId() == null || payment.getPaymentId().isBlank())) {
-            throw new ValidationException("Payment ID is required.");
         }
         if (payment.getAmount() <= 0) {
             throw new ValidationException("Payment amount must be greater than zero.");
