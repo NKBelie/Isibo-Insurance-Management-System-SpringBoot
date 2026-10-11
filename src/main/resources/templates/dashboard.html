@@ -16,6 +16,124 @@
         <main class="page-content">
             <div th:replace="~{fragments/alerts :: alerts}"></div>
 
+            <section class="customer-dashboard" th:if="${customerDashboard}">
+                <div class="dashboard-welcome">
+                    <div>
+                        <p class="eyebrow">Customer portal</p>
+                        <h2 th:text="${'Welcome, ' + customerName}">Welcome</h2>
+                        <p th:if="${customerMember != null}">Track your insurance application and selected plan.</p>
+                        <p th:if="${customerMember == null}">Your account is ready. Submit an insurance application when you are ready.</p>
+                    </div>
+                    <span class="role-badge">Customer</span>
+                </div>
+                <section class="panel-card application-card" th:if="${customerMember == null}">
+                    <div class="panel-header">
+                        <div>
+                            <p class="eyebrow">No application yet</p>
+                            <h3>Choose an insurance plan</h3>
+                        </div>
+                    </div>
+                    <p class="application-note">Complete your applicant details and choose an active insurance plan to submit for review.</p>
+                    <a class="btn btn-primary" th:href="@{/insurance-application}">Start insurance application</a>
+                </section>
+                <section class="panel-card application-card" th:if="${customerMember != null}">
+                    <div class="panel-header">
+                        <div>
+                            <p class="eyebrow">Application status</p>
+                            <h3 th:text="${customerMember.status}">PENDING</h3>
+                        </div>
+                        <span class="status-badge"
+                              th:classappend="${customerMember.status == 'ACTIVE'} ? ' status-active' : (${customerMember.status == 'REJECTED'} ? ' status-inactive' : '')"
+                              th:text="${customerMember.status}">PENDING</span>
+                    </div>
+                    <div class="customer-details">
+                        <div><span>Applicant</span><strong th:text="${customerMember.firstName + ' ' + customerMember.lastName}">Applicant Name</strong></div>
+                        <div><span>Application reference</span><strong th:text="${customerMember.memberId}">MEM-REF</strong></div>
+                        <div><span>Selected plan</span><strong th:text="${customerMember.insurancePlan.insurancePlanName}">Plan</strong></div>
+                        <div><span>Monthly premium</span><strong th:text="${#numbers.formatDecimal(customerMember.insurancePlan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</strong></div>
+                        <div><span>Coverage limit</span><strong th:text="${#numbers.formatDecimal(customerMember.insurancePlan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</strong></div>
+                        <div><span>Application date</span><strong th:text="${#temporals.format(customerMember.registrationDate, 'yyyy-MM-dd')}">Date</strong></div>
+                    </div>
+                    <p class="application-note" th:if="${customerMember.status == 'PENDING'}">
+                        Your application is waiting for review by an insurance administrator. You can return here to check for updates.
+                    </p>
+                    <p class="application-note" th:if="${customerMember.status == 'ACTIVE'}">
+                        Your insurance application has been approved. Contact your insurance officer if you need assistance.
+                    </p>
+                    <p class="application-note" th:if="${customerMember.status == 'REJECTED'}">
+                        Your application was not approved. Please contact the insurance office for more information.
+                    </p>
+                </section>
+                <section class="panel-card" th:if="${customerMember != null}">
+                    <div class="panel-header"><h3>Plan coverage</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Coverage</th><th>Description</th><th>Amount</th></tr></thead>
+                            <tbody>
+                            <tr th:each="coverage : ${customerCoverages}">
+                                <td th:text="${coverage.coverageId}">COV-001</td>
+                                <td th:text="${coverage.description}">Coverage description</td>
+                                <td th:text="${#numbers.formatDecimal(coverage.coverageAmount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(customerCoverages)}">
+                                <td colspan="3"><div class="empty-state"><h4>No coverage details available</h4><p>Coverage details for your selected plan will appear here.</p></div></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <div class="dashboard-panels customer-record-panels" th:if="${customerMember != null}">
+                    <section class="panel-card">
+                        <div class="panel-header"><h3>Recent claims</h3></div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead><tr><th>Claim reference</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                                <tbody>
+                                <tr th:each="claim : ${customerClaims}">
+                                    <td th:text="${claim.claimId}">CLM-001</td>
+                                    <td th:text="${claim.claimDate}">2026-10-01</td>
+                                    <td th:text="${#numbers.formatDecimal(claim.amountClaimed, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</td>
+                                    <td th:text="${claim.status}">PENDING</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(customerClaims)}">
+                                    <td colspan="4"><div class="empty-state"><h4>No claims yet</h4><p>Claims associated with your member account will appear here.</p></div></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <section class="panel-card">
+                        <div class="panel-header"><h3>Recent payments</h3></div>
+                        <div class="table-wrap">
+                            <table class="data-table">
+                                <thead><tr><th>Payment reference</th><th>Date</th><th>Method</th><th>Amount</th></tr></thead>
+                                <tbody>
+                                <tr th:each="payment : ${customerPayments}">
+                                    <td th:text="${payment.paymentId}">PAY-001</td>
+                                    <td th:text="${payment.paymentDate}">2026-10-01</td>
+                                    <td th:text="${payment.paymentMethod}">Cash</td>
+                                    <td th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(customerPayments)}">
+                                    <td colspan="4"><div class="empty-state"><h4>No payments yet</h4><p>Payments associated with your member account will appear here.</p></div></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <div th:unless="${customerDashboard}">
+            <section class="dashboard-welcome">
+                <div>
+                    <p class="eyebrow">Overview</p>
+                    <h2>Welcome to your workspace</h2>
+                    <p>Manage insurance operations, review activity, and keep member services moving.</p>
+                </div>
+                <span class="role-badge" th:text="${dashboardRole}">Insurance Officer workspace</span>
+            </section>
+
             <div class="dashboard-grid">
                 <div class="metric-card">
                     <div class="metric-head">
@@ -70,8 +188,10 @@
                 <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Pending Claims</p><p class="metric-value" th:text="${pendingClaims}">0</p></div><span class="metric-icon" aria-hidden="true">PN</span></div></div>
                 <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Approved Claims</p><p class="metric-value" th:text="${approvedClaims}">0</p></div><span class="metric-icon" aria-hidden="true">OK</span></div></div>
                 <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Payments</p><p class="metric-value" th:text="${totalPayments}">0</p></div><span class="metric-icon" aria-hidden="true">PY</span></div></div>
-                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Healthcare Providers</p><p class="metric-value" th:text="${totalProviders}">0</p></div><span class="metric-icon" aria-hidden="true">HP</span></div></div>
-                <div class="metric-card"><div class="metric-head"><div><p class="metric-label">Insurance Officers</p><p class="metric-value" th:text="${totalOfficers}">0</p></div><span class="metric-icon" aria-hidden="true">IO</span></div></div>
+                <div class="metric-card" th:if="${isAdmin}"><div class="metric-head"><div><p class="metric-label">Healthcare Providers</p><p class="metric-value" th:text="${totalProviders}">0</p></div><span class="metric-icon" aria-hidden="true">HP</span></div></div>
+                <div class="metric-card" th:if="${isAdmin}"><div class="metric-head"><div><p class="metric-label">Insurance Officers</p><p class="metric-value" th:text="${totalOfficers}">0</p></div><span class="metric-icon" aria-hidden="true">IO</span></div></div>
+                <div class="metric-card" th:if="${isAdmin}"><div class="metric-head"><div><p class="metric-label">System Users</p><p class="metric-value" th:text="${totalUsers}">0</p></div><span class="metric-icon" aria-hidden="true">US</span></div></div>
+                <div class="metric-card" th:if="${isAdmin}"><div class="metric-head"><div><p class="metric-label">Pending Applications</p><p class="metric-value" th:text="${pendingApplications}">0</p></div><span class="metric-icon" aria-hidden="true">PA</span></div></div>
             </div>
 
             <div class="dashboard-panels">
@@ -116,15 +236,25 @@
 
                 <div class="panel-card">
                     <div class="panel-header">
-                        <h3>Quick Actions</h3>
+                        <h3 th:text="${isAdmin ? 'Administration actions' : 'Officer actions'}">Officer actions</h3>
                     </div>
-                    <div class="quick-actions">
+                    <div class="quick-actions" th:if="${isAdmin}">
                         <a class="btn btn-primary" th:href="@{/members/new}">Register Member</a>
                         <a class="btn btn-secondary" th:href="@{/insurance-plans/new}">Create Insurance Plan</a>
                         <a class="btn btn-ghost" th:href="@{/coverages/new}">Add Coverage</a>
-                        <a class="btn btn-ghost" th:href="@{/claims/new}">Submit Claim</a>
+                        <a class="btn btn-ghost" th:href="@{/claims/new}">Create Claim</a>
                         <a class="btn btn-ghost" th:href="@{/payments/new}">Record Payment</a>
                         <a class="btn btn-ghost" th:href="@{/providers/new}">Register Provider</a>
+                        <a class="btn btn-ghost" th:href="@{/users/new}">Add System User</a>
+                        <a class="btn btn-ghost" th:href="@{/members(status='PENDING')}">Review Applications</a>
+                        <a class="btn btn-ghost" th:href="@{/reports}">View Reports</a>
+                    </div>
+                    <div class="quick-actions" th:unless="${isAdmin}">
+                        <a class="btn btn-primary" th:href="@{/members/new}">Register Member</a>
+                        <a class="btn btn-primary" th:href="@{/claims}">Review Claims</a>
+                        <a class="btn btn-secondary" th:href="@{/members}">View Members</a>
+                        <a class="btn btn-ghost" th:href="@{/insurance-plans}">View Insurance Plans</a>
+                        <a class="btn btn-ghost" th:href="@{/payments}">View Payments</a>
                     </div>
                     <div class="dashboard-panels" style="margin-top: 18px;">
                         <div class="panel-card">
@@ -221,6 +351,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </main>
     </div>
