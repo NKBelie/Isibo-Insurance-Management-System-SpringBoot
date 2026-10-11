@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title th:text="${plan.id != null ? 'Edit Insurance Plan' : 'New Insurance Plan'} + ' | ISIBO'">New Insurance Plan | ISIBO</title>
+    <title th:text="${insurancePlan.id != null ? 'Edit Insurance Plan' : 'New Insurance Plan'} + ' | ISIBO'">New Insurance Plan | ISIBO</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" />
     <link rel="stylesheet" th:href="@{/css/forms.css}" />
 </head>
@@ -16,7 +16,11 @@
             <div th:replace="~{fragments/alerts :: alerts}"></div>
 
             <div class="page-header">
-                <h2 th:text="${plan.id != null ? 'Edit Insurance Plan' : 'Create Insurance Plan'}">Create Insurance Plan</h2>
+                <div>
+                    <p class="eyebrow" th:text="${insurancePlan.id != null ? 'Update product details' : 'Product management'}">Product management</p>
+                    <h2 th:text="${insurancePlan.id != null ? 'Edit Insurance Plan' : 'Create Insurance Plan'}">Create Insurance Plan</h2>
+                    <p class="page-description">Set the plan price, coverage ceiling, and availability for customers.</p>
+                </div>
                 <div class="page-actions">
                     <a class="btn btn-secondary" th:href="@{/insurance-plans}">Back to plans</a>
                 </div>
@@ -26,12 +30,9 @@
                 <form th:action="${insurancePlan.id != null ? '/insurance-plans/' + insurancePlan.id + '/update' : '/insurance-plans'}" method="post" class="entity-form">
                     <div class="form-grid two-columns">
                         <div class="field-group">
-                            <label for="insurancePlanId">Plan ID</label>
-                            <input id="insurancePlanId" name="insurancePlanId" type="text" th:value="${insurancePlan.insurancePlanId}" required />
-                        </div>
-                        <div class="field-group">
                             <label for="insurancePlanName">Plan Name</label>
-                            <input id="insurancePlanName" name="insurancePlanName" type="text" th:value="${insurancePlan.insurancePlanName}" required />
+                            <input id="insurancePlanName" name="insurancePlanName" type="text" maxlength="120"
+                                   th:value="${insurancePlan.insurancePlanName}" required />
                         </div>
                         <div class="field-group">
                             <label for="status">Status</label>
@@ -42,24 +43,33 @@
                         </div>
                         <div class="field-group">
                             <label for="monthlyPremium">Monthly Premium</label>
-                            <input id="monthlyPremium" name="monthlyPremium" type="number" min="0" step="0.01" th:value="${insurancePlan.monthlyPremium}" required />
+                            <input id="monthlyPremium" name="monthlyPremium" type="number" min="0.01" step="0.01"
+                                   th:value="${insurancePlan.monthlyPremium > 0 ? insurancePlan.monthlyPremium : ''}" required />
+                            <small>Amount charged for each month of coverage, in RWF.</small>
                         </div>
                         <div class="field-group">
                             <label for="coverageLimit">Coverage Limit</label>
-                            <input id="coverageLimit" name="coverageLimit" type="number" min="0" step="0.01" th:value="${insurancePlan.coverageLimit}" required />
+                            <input id="coverageLimit" name="coverageLimit" type="number" min="0.01" step="0.01"
+                                   th:value="${insurancePlan.coverageLimit > 0 ? insurancePlan.coverageLimit : ''}" required />
+                            <small>Maximum benefit available under this plan, in RWF.</small>
                         </div>
                         <div class="field-group">
                             <label for="durationMonths">Duration (Months)</label>
-                            <input id="durationMonths" name="durationMonths" type="number" min="1" th:value="${insurancePlan.durationMonths}" required />
+                            <input id="durationMonths" name="durationMonths" type="number" min="1" step="1"
+                                   th:value="${insurancePlan.durationMonths > 0 ? insurancePlan.durationMonths : ''}" required />
                         </div>
                         <div class="field-group full-span">
                             <label for="description">Description</label>
-                            <textarea id="description" name="description" rows="4" th:text="${insurancePlan.description}"></textarea>
+                            <textarea id="description" name="description" rows="4" maxlength="2000"
+                                      placeholder="Describe who this plan serves and what customers should know."
+                                      th:text="${insurancePlan.description}"></textarea>
+                            <small>Optional. Up to 2,000 characters.</small>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button class="btn btn-primary" type="submit">Save Plan</button>
+                        <button class="btn btn-primary" type="submit"
+                                th:text="${insurancePlan.id != null ? 'Save Changes' : 'Create Plan'}">Create Plan</button>
                         <a class="btn btn-secondary" th:href="@{/insurance-plans}">Cancel</a>
                     </div>
                 </form>
