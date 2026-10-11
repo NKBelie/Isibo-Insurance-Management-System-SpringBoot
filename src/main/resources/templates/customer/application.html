@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#F5F7FA" />
+    <title>Insurance Application | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/forms.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content application-page">
+            <div th:replace="~{fragments/alerts :: alerts}"></div>
+            <div class="page-header">
+                <div>
+                    <p class="eyebrow">Customer portal</p>
+                    <h2>Apply for insurance</h2>
+                    <p class="page-description">Tell us about yourself and choose the cover that suits your needs.</p>
+                </div>
+                <div class="page-actions">
+                    <a class="btn btn-secondary" th:href="@{/dashboard}">Back to dashboard</a>
+                </div>
+            </div>
+
+            <div class="application-layout">
+                <section class="application-main" aria-labelledby="application-form-title">
+                    <form th:action="@{/insurance-application}" th:object="${application}" method="post" class="form-shell entity-form application-form">
+                        <div class="application-form-heading">
+                            <h3 id="application-form-title">Your application</h3>
+                            <p>Fields marked required must be completed before submission.</p>
+                        </div>
+
+                        <fieldset class="application-fieldset">
+                            <legend>Applicant details</legend>
+                            <div class="application-field-grid">
+                                <div class="field-group">
+                                    <label for="firstName">First name <span aria-hidden="true">*</span></label>
+                                    <input id="firstName" type="text" th:field="*{firstName}" maxlength="100" autocomplete="given-name" required />
+                                </div>
+                                <div class="field-group">
+                                    <label for="lastName">Last name <span aria-hidden="true">*</span></label>
+                                    <input id="lastName" type="text" th:field="*{lastName}" maxlength="100" autocomplete="family-name" required />
+                                </div>
+                                <div class="field-group">
+                                    <label for="nationalId">National ID <span aria-hidden="true">*</span></label>
+                                    <input id="nationalId" type="text" inputmode="numeric" pattern="[0-9]{16}"
+                                           minlength="16" maxlength="16" title="Enter exactly 16 digits."
+                                           th:field="*{nationalId}" autocomplete="off" required />
+                                </div>
+                                <div class="field-group">
+                                    <label for="phone">Phone number <span aria-hidden="true">*</span></label>
+                                    <input id="phone" type="tel" th:field="*{phone}" maxlength="30" autocomplete="tel" required />
+                                </div>
+                                <div class="field-group">
+                                    <label for="dateOfBirth">Date of birth <span aria-hidden="true">*</span></label>
+                                    <input id="dateOfBirth" type="date" th:field="*{dateOfBirth}" autocomplete="bday" required />
+                                </div>
+                                <div class="field-group">
+                                    <label for="gender">Gender <span aria-hidden="true">*</span></label>
+                                    <select id="gender" th:field="*{gender}" required>
+                                        <option value="">Select gender</option>
+                                        <option value="MALE">Male</option>
+                                        <option value="FEMALE">Female</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                                <div class="field-group application-field-full">
+                                    <label for="address">Address <span aria-hidden="true">*</span></label>
+                                    <textarea id="address" th:field="*{address}" rows="3" maxlength="255" autocomplete="street-address" required></textarea>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="application-fieldset">
+                            <legend>Choose a plan</legend>
+                            <div class="field-group">
+                                <label for="insurancePlanId">Available insurance plan <span aria-hidden="true">*</span></label>
+                                <select id="insurancePlanId" th:field="*{insurancePlanId}" th:disabled="${#lists.isEmpty(insurancePlans)}" required>
+                                    <option value="">Select an active plan</option>
+                                    <option th:each="plan : ${insurancePlans}" th:value="${plan.id}"
+                                            th:text="${plan.insurancePlanName + ' - ' + #numbers.formatDecimal(plan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF/month - cover up to ' + #numbers.formatDecimal(plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}"></option>
+                                </select>
+                                <small>Premiums are shown monthly. The coverage limit is the maximum benefit provided by the selected plan.</small>
+                                <div class="application-empty-plans" th:if="${#lists.isEmpty(insurancePlans)}" role="status">
+                                    <strong>No active plans are available right now.</strong>
+                                    <span>You can return to your dashboard and try again when a plan is open for applications.</span>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="application-form-footer">
+                            <p><span aria-hidden="true">*</span> Required fields</p>
+                            <div class="form-actions">
+                                <a class="btn btn-secondary" th:href="@{/dashboard}">Cancel</a>
+                                <button class="btn btn-primary" type="submit" th:disabled="${#lists.isEmpty(insurancePlans)}">Submit application</button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+
+                <aside class="application-aside" aria-label="Application information">
+                    <section class="application-sidecard">
+                        <p class="eyebrow">What happens next</p>
+                        <h3>From application to cover</h3>
+                        <ol class="application-steps">
+                            <li><span>1</span><div><strong>Submit your details</strong><p>Choose an active plan and send your application for review.</p></div></li>
+                            <li><span>2</span><div><strong>Application review</strong><p>An administrator reviews the information and updates your application status.</p></div></li>
+                            <li><span>3</span><div><strong>Check your dashboard</strong><p>Your application status and selected plan are shown in your customer workspace.</p></div></li>
+                        </ol>
+                    </section>
+                    <section class="application-sidecard application-account-card">
+                        <p class="eyebrow">Your account</p>
+                        <h3>Application contact</h3>
+                        <p>We will associate this application with the email address on your account.</p>
+                        <strong class="application-account-email" th:text="${accountEmail}">customer@example.com</strong>
+                    </section>
+                    <p class="application-privacy-note">Your application details are used to manage your insurance request and are only available to authorized staff.</p>
+                </aside>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
