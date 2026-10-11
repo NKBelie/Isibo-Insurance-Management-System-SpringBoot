@@ -1,5 +1,20 @@
 .form-panel {
-    padding: 24px;
+    padding: 28px;
+    border-radius: 12px;
+}
+
+.form-shell {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--white);
+    box-shadow: var(--shadow);
+}
+
+.entity-form {
+    width: 100%;
 }
 
 .form-grid {
@@ -8,44 +23,154 @@
     gap: 18px 20px;
 }
 
+.form-grid.two-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .form-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.form-group.full-width {
+.form-group.full-width,
+.field-group.full-width,
+.field-group.full-span,
+.info-tile.full-width {
     grid-column: 1 / -1;
 }
 
-.form-group label {
+.form-group label,
+.field-group label {
     font-weight: 600;
     color: var(--text);
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea {
+.form-group textarea,
+.field-group input,
+.field-group select,
+.field-group textarea {
     width: 100%;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 9px;
     background: var(--white);
     color: var(--text);
-    min-height: 46px;
-    padding: 10px 12px;
+    min-height: 50px;
+    padding: 12px 14px;
     outline: none;
 }
 
-.form-group textarea {
+.form-group textarea,
+.field-group textarea {
     min-height: 90px;
     resize: vertical;
 }
 
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus {
-    border-color: rgba(18, 59, 109, 0.5);
-    box-shadow: 0 0 0 3px rgba(18, 59, 109, 0.09);
+.form-group textarea:focus,
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus {
+    border-color: var(--primary);
+    outline: 3px solid rgba(18, 59, 109, 0.14);
+    outline-offset: 1px;
+}
+
+.form-group input:disabled,
+.form-group select:disabled,
+.form-group textarea:disabled,
+.field-group input:disabled,
+.field-group select:disabled,
+.field-group textarea:disabled {
+    background: #F2F4F7;
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+.form-group small,
+.field-group small {
+    color: var(--muted);
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+.detail-card {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--white);
+    box-shadow: var(--shadow);
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+    background: #fbfcfe;
+}
+
+.detail-header h3 {
+    margin: 0 0 10px;
+    color: var(--dark);
+    font-size: 1.25rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 22px;
+    padding: 12px 28px 20px;
+}
+
+.detail-grid .field-group {
+    display: grid;
+    align-content: start;
+    gap: 7px;
+    min-width: 0;
+    padding: 16px 0;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.detail-grid .field-group label {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.detail-grid .field-group span {
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.plan-detail-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 20px 28px 0;
+}
+
+.plan-detail-summary > div {
+    display: grid;
+    gap: 5px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #f7fafe;
+}
+
+.plan-detail-summary strong {
+    color: var(--dark);
+    font-size: 1.35rem;
 }
 
 .form-header {
@@ -67,6 +192,16 @@
     padding-top: 8px;
     margin-top: 22px;
     border-top: 1px solid var(--border);
+}
+
+.form-actions .btn {
+    min-height: 48px;
+    border-radius: 8px;
+}
+
+body :focus-visible {
+    outline: 3px solid #7FB0E3;
+    outline-offset: 3px;
 }
 
 .section-block {
@@ -105,6 +240,8 @@
 .info-tile strong {
     font-size: 1.1rem;
     color: var(--text);
+    overflow-wrap: anywhere;
+    line-height: 1.5;
 }
 
 .validation-box {
@@ -128,7 +265,320 @@
         grid-template-columns: 1fr;
     }
 
-    .form-panel {
+    .form-panel,
+    .form-shell {
         padding: 18px;
+    }
+
+    .detail-header {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .plan-detail-summary {
+        grid-template-columns: 1fr;
+        padding: 16px 20px 0;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+        padding: 8px 20px 16px;
+    }
+
+    .detail-grid .field-group.full-span,
+    .detail-grid .field-group.full-width,
+    .detail-grid .info-tile.full-width {
+        grid-column: auto;
+    }
+
+    .form-actions {
+        flex-wrap: wrap;
+    }
+
+    .form-actions .btn {
+        flex: 1 1 150px;
+    }
+}
+
+.application-page .page-header {
+    margin-bottom: 24px;
+}
+
+.application-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+    align-items: start;
+    gap: 22px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.application-main,
+.application-form {
+    min-width: 0;
+}
+
+.application-form {
+    max-width: none;
+    margin: 0;
+    padding: clamp(20px, 3vw, 34px);
+}
+
+.application-form-heading {
+    margin-bottom: 24px;
+}
+
+.application-form-heading h3,
+.application-sidecard h3 {
+    margin: 0;
+    color: var(--dark);
+    font-size: 1.16rem;
+}
+
+.application-form-heading p,
+.application-sidecard > p:not(.eyebrow) {
+    margin: 7px 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.application-fieldset {
+    min-width: 0;
+    margin: 0 0 24px;
+    padding: 0;
+    border: 0;
+}
+
+.application-fieldset legend {
+    width: 100%;
+    padding: 0 0 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--dark);
+    font-size: 0.98rem;
+    font-weight: 700;
+}
+
+.application-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 17px 20px;
+}
+
+.application-field-grid .field-group,
+.application-fieldset > .field-group {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    min-width: 0;
+}
+
+.application-field-full {
+    grid-column: 1 / -1;
+}
+
+.application-field-grid label,
+.application-fieldset > .field-group label {
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.application-field-grid label span,
+.application-fieldset label span,
+.application-form-footer > p span {
+    color: var(--error);
+}
+
+.application-field-grid input,
+.application-field-grid select,
+.application-field-grid textarea,
+.application-fieldset > .field-group select {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 13px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--white);
+    color: var(--text);
+}
+
+.application-field-grid textarea {
+    min-height: 92px;
+    resize: vertical;
+}
+
+.application-field-grid input:focus,
+.application-field-grid select:focus,
+.application-field-grid textarea:focus,
+.application-fieldset > .field-group select:focus {
+    border-color: var(--primary);
+    outline: 3px solid rgba(18, 59, 109, 0.14);
+    outline-offset: 1px;
+}
+
+.application-field-grid small,
+.application-fieldset small {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.application-empty-plans {
+    display: grid;
+    gap: 5px;
+    margin-top: 4px;
+    padding: 13px 15px;
+    border: 1px solid #f0d6a8;
+    border-radius: 10px;
+    background: #fffaf0;
+    color: #754c0e;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.application-empty-plans span {
+    color: #7b6746;
+}
+
+.application-form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.application-form-footer > p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.application-form-footer .form-actions {
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+.application-aside {
+    display: grid;
+    gap: 16px;
+}
+
+.application-sidecard {
+    padding: 21px;
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    background: var(--white);
+    box-shadow: var(--shadow);
+}
+
+.application-sidecard > .eyebrow {
+    margin-bottom: 8px;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.application-steps {
+    display: grid;
+    gap: 19px;
+    padding: 0;
+    margin: 21px 0 0;
+    list-style: none;
+}
+
+.application-steps li {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    align-items: start;
+    gap: 11px;
+}
+
+.application-steps li > span {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 50%;
+    background: #edf3fa;
+    color: var(--primary);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.application-steps strong {
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.application-steps p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.application-account-email {
+    display: block;
+    margin-top: 14px;
+    padding: 11px 12px;
+    overflow-wrap: anywhere;
+    border-radius: 9px;
+    background: #f5f7fa;
+    color: var(--dark);
+    font-size: 0.88rem;
+}
+
+.application-privacy-note {
+    margin: 0;
+    padding: 0 4px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.55;
+}
+
+@media (max-width: 980px) {
+    .application-layout {
+        grid-template-columns: minmax(0, 1fr) 260px;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 760px) {
+    .application-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .application-aside {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .application-privacy-note {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 560px) {
+    .application-field-grid,
+    .application-aside {
+        grid-template-columns: 1fr;
+    }
+
+    .application-field-full,
+    .application-privacy-note {
+        grid-column: auto;
+    }
+
+    .application-form-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .application-form-footer .form-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
     }
 }

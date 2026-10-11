@@ -22,11 +22,6 @@
                 <form th:action="${payment.id != null ? '/payments/' + payment.id + '/update' : '/payments'}" method="post">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="paymentId">Payment ID</label>
-                            <input id="paymentId" name="paymentId" type="text" th:value="${payment.paymentId}"
-                                   th:readonly="${payment.id != null}" required />
-                        </div>
-                        <div class="form-group">
                             <label for="member">Member</label>
                             <select id="member" name="member.nationalId" required>
                                 <option value="">Select member</option>

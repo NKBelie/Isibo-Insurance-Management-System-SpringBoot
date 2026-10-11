@@ -3,34 +3,92 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register | ISIBO</title>
+    <meta name="theme-color" content="#0B2545" />
+    <title>Create account | ISIBO</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/auth.css}" />
 </head>
 <body class="auth-page">
-<main class="auth-card">
-    <h1>Create an account</h1>
-    <p class="subtle">Register for Insurance Officer access</p>
-    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-    <form th:action="@{/register}" th:object="${user}" method="post">
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input id="username" type="text" th:field="*{username}" minlength="3" maxlength="60" autocomplete="username" required />
+<main class="auth-layout auth-layout-register" aria-labelledby="register-title">
+    <aside class="auth-brand-panel">
+        <a class="auth-wordmark" th:href="@{/login}" aria-label="ISIBO Insurance home">
+            <span class="auth-logo" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none"><path d="M16 3.5 27 7.8v7.1c0 7-4.5 11.7-11 14.3C9.5 26.6 5 21.9 5 14.9V7.8L16 3.5Z" stroke="currentColor" stroke-width="2"/><path d="M16 10v12M10 16h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            </span>
+            <span>ISIBO <small>INSURANCE</small></span>
+        </a>
+        <div class="auth-brand-copy">
+            <p class="auth-overline">A secure start</p>
+            <h1>One account for your insurance journey.</h1>
+            <p>Create a secure account first. After signing in, you can submit an insurance application and track its review.</p>
+            <ul class="auth-trust-list">
+                <li><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 20 6v5.2c0 5.1-3.3 8.5-8 10.4-4.7-1.9-8-5.3-8-10.4V6l8-3Z" stroke="currentColor" stroke-width="1.7"/><path d="m8.5 12 2.3 2.3 4.8-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Private account access</li>
+                <li><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h14v15H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Applications saved to your account</li>
+            </ul>
         </div>
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input id="email" type="email" th:field="*{email}" autocomplete="email" required />
+        <p class="auth-brand-footer">Your insurance information, organized and protected.</p>
+    </aside>
+
+    <section class="auth-form-panel auth-register-panel">
+        <div class="auth-form-wrap">
+            <a class="auth-mobile-brand" th:href="@{/login}">
+                <span class="auth-logo" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3.5 27 7.8v7.1c0 7-4.5 11.7-11 14.3C9.5 26.6 5 21.9 5 14.9V7.8L16 3.5Z" stroke="currentColor" stroke-width="2"/><path d="M16 10v12M10 16h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+                <span>ISIBO <small>INSURANCE</small></span>
+            </a>
+            <header class="auth-heading">
+                <p class="auth-overline">Customer account</p>
+                <h2 id="register-title">Create your ISIBO account</h2>
+                <p>Set up your account to access your insurance workspace.</p>
+            </header>
+
+            <div class="auth-feedback" aria-live="polite" aria-atomic="true">
+                <div th:if="${errorMessage}" class="auth-message auth-message-error" role="alert" th:text="${errorMessage}"></div>
+            </div>
+
+            <form class="auth-form" th:action="@{/register}" th:object="${registration}" method="post" data-auth-form data-register-form>
+                <div class="auth-field">
+                    <label for="username">Username</label>
+                    <input id="username" type="text" th:field="*{username}" minlength="3" maxlength="60"
+                           autocomplete="username" autocapitalize="none" spellcheck="false" required />
+                    <small class="field-hint">Use 3–60 characters.</small>
+                </div>
+                <div class="auth-field">
+                    <label for="email">Email address</label>
+                    <input id="email" type="email" th:field="*{email}" autocomplete="email" required />
+                </div>
+                <div class="auth-field">
+                    <label for="password">Password</label>
+                    <div class="auth-password-control">
+                        <input id="password" type="password" th:field="*{password}" minlength="8"
+                               autocomplete="new-password" aria-describedby="password-requirement" required />
+                        <button class="password-toggle" type="button" data-password-toggle="password"
+                                aria-label="Show password" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>
+                        </button>
+                    </div>
+                    <small id="password-requirement" class="field-hint">Use at least 8 characters. Your password is stored securely as a hash.</small>
+                </div>
+                <div class="auth-field">
+                    <label for="passwordConfirmation">Confirm password</label>
+                    <div class="auth-password-control">
+                        <input id="passwordConfirmation" type="password" name="passwordConfirmation" minlength="8"
+                               autocomplete="new-password" aria-describedby="password-match-message" required />
+                        <button class="password-toggle" type="button" data-password-toggle="passwordConfirmation"
+                                aria-label="Show confirmation password" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>
+                        </button>
+                    </div>
+                    <small id="password-match-message" class="field-hint" aria-live="polite"></small>
+                </div>
+                <button class="auth-submit" type="submit" data-submit-label="Creating account…">Create account</button>
+            </form>
+
+            <p class="auth-policy-note">Your account is created with customer access. Insurance administrator privileges are never available through public registration.</p>
+            <p class="auth-switch">Already have an account? <a th:href="@{/login}">Sign in</a></p>
+            <p class="auth-copyright">ISIBO Insurance Management System</p>
         </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input id="password" type="password" name="passwordHash" minlength="8" autocomplete="new-password" required />
-        </div>
-        <div class="form-group">
-            <label for="passwordConfirmation">Confirm password</label>
-            <input id="passwordConfirmation" type="password" name="passwordConfirmation" minlength="8" autocomplete="new-password" required />
-        </div>
-        <button type="submit" class="btn btn-primary full-width">Create account</button>
-    </form>
-    <p class="subtle"><a th:href="@{/login}">Return to sign in</a></p>
+    </section>
 </main>
+<script th:src="@{/js/auth.js}" defer></script>
 </body>
 </html>

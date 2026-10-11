@@ -1,6 +1,7 @@
 package payment.service;
 
 import exception.ValidationException;
+import base.BusinessIdGenerator;
 import member.domain.Member;
 import member.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,8 @@ class PaymentServiceImplTest {
     @Mock
     private PaymentRepository paymentRepository;
     @Mock
+    private BusinessIdGenerator businessIdGenerator;
+    @Mock
     private MemberRepository memberRepository;
 
     @InjectMocks
@@ -33,8 +36,8 @@ class PaymentServiceImplTest {
     void createShouldNormalizePaymentMethodAndResolveMember() {
         Payment payment = validPayment();
         payment.setPaymentMethod("mobile money");
-        when(paymentRepository.existsByPaymentId("PAY-1")).thenReturn(false);
-        when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(payment.getMember()));
+        when(businessIdGenerator.nextPaymentId()).thenReturn("PAY-001");
+        when(memberRepository.findById("1199887766554433")).thenReturn(Optional.of(payment.getMember()));
         when(paymentRepository.save(payment)).thenReturn(payment);
 
         Payment result = paymentService.create(payment);
@@ -46,6 +49,7 @@ class PaymentServiceImplTest {
     void createShouldRejectFuturePaymentDate() {
         Payment payment = validPayment();
         payment.setPaymentDate(LocalDate.now().plusDays(1));
+        when(businessIdGenerator.nextPaymentId()).thenReturn("PAY-001");
 
         assertThrows(ValidationException.class, () -> paymentService.create(payment));
     }
@@ -54,16 +58,17 @@ class PaymentServiceImplTest {
     void createShouldRejectUnsupportedPaymentMethod() {
         Payment payment = validPayment();
         payment.setPaymentMethod("Cryptocurrency");
+        when(businessIdGenerator.nextPaymentId()).thenReturn("PAY-001");
 
         assertThrows(ValidationException.class, () -> paymentService.create(payment));
     }
 
     private Payment validPayment() {
         Member member = new Member();
-        member.setNationalId("NAT-1");
+        member.setNationalId("1199887766554433");
 
         Payment payment = new Payment();
-        payment.setPaymentId("PAY-1");
+        payment.setPaymentId("PAY-001");
         payment.setAmount(25000);
         payment.setPaymentDate(LocalDate.now());
         payment.setPaymentMethod("Cash");

@@ -15,10 +15,28 @@
         <main class="page-content">
             <div th:replace="~{fragments/alerts :: alerts}"></div>
             <div class="page-header">
-                <h2>System Users</h2>
+                <div>
+                    <p class="eyebrow">Access management</p>
+                    <h2>System Users</h2>
+                    <p class="page-description">Manage account access for administrators, officers, and customers.</p>
+                </div>
                 <div class="page-actions"><a class="btn btn-primary" th:href="@{/users/new}">Create User</a></div>
             </div>
             <div class="table-shell">
+                <form class="table-toolbar" method="get" th:action="@{/users}">
+                    <div class="filter-row">
+                        <input type="search" name="search" placeholder="Search username, email or role"
+                               th:value="${search}" aria-label="Search system users" />
+                        <select name="role" aria-label="Filter users by role">
+                            <option value="">All roles</option>
+                            <option th:each="option : ${userRoles}" th:value="${option.value}" th:text="${option.label}"
+                                    th:selected="${#strings.equalsIgnoreCase(option.value, role)}">Customer</option>
+                        </select>
+                        <button class="btn btn-secondary" type="submit">Apply filters</button>
+                        <a class="filter-clear" th:if="${search != null or role != null}" th:href="@{/users}">Clear</a>
+                    </div>
+                    <p class="result-count" th:text="'Showing ' + ${pageStart} + '–' + ${pageEnd} + ' of ' + ${filteredCount} + ' accounts'">0 accounts</p>
+                </form>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
@@ -26,11 +44,11 @@
                         <tr th:each="user : ${users}">
                             <td th:text="${user.username}">user</td>
                             <td th:text="${user.email}">user@example.com</td>
-                            <td th:text="${user.role}">Insurance Officer</td>
+                            <td th:text="${userRoleLabels[user.id]}">Insurance Officer</td>
                             <td><div class="action-group">
                                 <a class="action-link primary" th:href="@{/users/{id}(id=${user.id})}">View</a>
                                 <a class="action-link" th:href="@{/users/{id}/edit(id=${user.id})}">Edit</a>
-                                <form th:action="@{/users/{id}/delete(id=${user.id})}" method="post" style="display:inline;">
+                                <form th:if="${userCanDelete[user.id]}" th:action="@{/users/{id}/delete(id=${user.id})}" method="post" style="display:inline;">
                                     <button class="action-link danger" type="submit" data-confirm-delete="Delete this user account?">Delete</button>
                                 </form>
                             </div></td>
@@ -39,6 +57,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div th:replace="~{fragments/pagination :: controls}"></div>
             </div>
         </main>
     </div>

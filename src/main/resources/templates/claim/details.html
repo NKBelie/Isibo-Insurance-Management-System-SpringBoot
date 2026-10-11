@@ -18,9 +18,9 @@
                 <h2 th:text="${'Claim ' + claim.claimId}">Claim Details</h2>
                 <div class="page-actions">
                     <a class="btn btn-secondary" th:href="@{/claims}">Back to claims</a>
-                    <a class="btn btn-secondary" sec:authorize="hasRole('ADMIN')" th:if="${claim.status == 'PENDING'}"
+                    <a class="btn btn-secondary" sec:authorize="hasRole('ADMINISTRATOR')" th:if="${claim.status == 'PENDING'}"
                        th:href="@{/claims/{id}/edit(id=${claim.id})}">Edit</a>
-                    <a class="btn btn-primary" sec:authorize="hasRole('OFFICER')" th:if="${claim.status == 'PENDING'}"
+                    <a class="btn btn-primary" sec:authorize="hasRole('INSURANCE_OFFICER')" th:if="${claim.status == 'PENDING'}"
                        th:href="@{/claims/{id}/review(id=${claim.id})}">Review Claim</a>
                 </div>
             </div>

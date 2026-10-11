@@ -22,11 +22,6 @@
                 <form th:action="${claim.id != null ? '/claims/' + claim.id + '/update' : '/claims'}" method="post">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="claimId">Claim ID</label>
-                            <input id="claimId" name="claimId" type="text" th:value="${claim.claimId}"
-                                   th:readonly="${claim.id != null}" required />
-                        </div>
-                        <div class="form-group">
                             <label for="claimDate">Claim Date</label>
                             <input id="claimDate" name="claimDate" type="date" th:value="${claim.claimDate}"
                                    th:max="${today}" required />

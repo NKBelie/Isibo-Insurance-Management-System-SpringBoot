@@ -6,19 +6,32 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import user.domain.User;
+import user.domain.SystemRole;
 import user.repository.UserRepository;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    @Bean
+    public ApplicationRunner normalizeStoredUserRoles(UserRepository userRepository) {
+        return args -> {
+            userRepository.normalizeAdministratorRoles();
+            userRepository.normalizeInsuranceOfficerRoles();
+            userRepository.normalizeCustomerRoles();
+        };
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -31,7 +44,7 @@ public class SecurityConfig {
                 .map(user -> org.springframework.security.core.userdetails.User.builder()
                         .username(user.getUsername())
                         .password(user.getPasswordHash())
-                        .roles(mapRoleToAuthority(user.getRole()))
+                        .authorities(SystemRole.from(user.getRole()).authority())
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
@@ -58,7 +71,7 @@ public class SecurityConfig {
                 User admin = new User();
                 admin.setUsername(username.trim());
                 admin.setPasswordHash(passwordEncoder.encode(password));
-                admin.setRole("Administrator");
+                admin.setRole(SystemRole.ADMINISTRATOR.name());
                 admin.setEmail(email.trim());
                 userRepository.save(admin);
             }
@@ -66,63 +79,72 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, SessionRegistry sessionRegistry) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/error").permitAll()
-                        .requestMatchers("/api/users/**", "/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/providers/**", "/api/officers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/payments/**", "/api/members/**", "/api/insurance-plans/**",
-                                "/api/coverage/**").hasAnyRole("ADMIN", "OFFICER")
-                        .requestMatchers("/api/payments/**", "/api/members/**", "/api/insurance-plans/**",
-                                "/api/coverage/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/payments/**").hasAnyRole("ADMIN", "OFFICER")
-                        .requestMatchers("/payments/**").hasRole("ADMIN")
-                        .requestMatchers("/api/claims/*/decision").hasRole("OFFICER")
-                        .requestMatchers(HttpMethod.GET, "/api/claims/**").hasAnyRole("ADMIN", "OFFICER")
-                        .requestMatchers(HttpMethod.POST, "/api/claims/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/claims/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/claims/**").hasRole("ADMIN")
-                        .requestMatchers("/claims/*/decision").hasRole("OFFICER")
-                        .requestMatchers("/claims/*/review").hasRole("OFFICER")
-                        .requestMatchers(HttpMethod.GET, "/claims/new", "/claims/*/edit").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/claims", "/claims/*/update", "/claims/*/delete").hasRole("ADMIN")
-                        .requestMatchers("/claims/**").hasAnyRole("ADMIN", "OFFICER")
-                        .requestMatchers(HttpMethod.GET, "/members/new", "/members/*/edit",
+                        .requestMatchers("/login", "/register", "/access-denied", "/css/**", "/js/**", "/images/**", "/error", "/favicon.ico").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/", "/index", "/home", "/dashboard").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/admin/dashboard").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/officer/dashboard").hasRole("INSURANCE_OFFICER")
+                        .requestMatchers(HttpMethod.GET, "/customer/dashboard").hasRole("CUSTOMER")
+                        .requestMatchers("/reports").hasRole("ADMINISTRATOR")
+                        .requestMatchers("/insurance-application").hasRole("CUSTOMER")
+
+                        .requestMatchers("/api/users/**", "/users/**", "/api/providers/**", "/api/officers/**",
+                                "/providers/**", "/officers/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/claims/*/review").hasRole("INSURANCE_OFFICER")
+                        .requestMatchers(HttpMethod.POST, "/api/claims/*/decision", "/claims/*/decision").hasRole("INSURANCE_OFFICER")
+                        .requestMatchers(HttpMethod.GET, "/members/new", "/members/*/edit")
+                                .hasAnyRole("ADMINISTRATOR", "INSURANCE_OFFICER")
+                        .requestMatchers(HttpMethod.POST, "/members", "/members/*/update")
+                                .hasAnyRole("ADMINISTRATOR", "INSURANCE_OFFICER")
+                        .requestMatchers(HttpMethod.POST, "/api/members/**")
+                                .hasAnyRole("ADMINISTRATOR", "INSURANCE_OFFICER")
+                        .requestMatchers(HttpMethod.PUT, "/api/members/**")
+                                .hasAnyRole("ADMINISTRATOR", "INSURANCE_OFFICER")
+                        .requestMatchers(HttpMethod.GET, "/claims/new", "/claims/*/edit",
+                                "/payments/new", "/payments/*/edit",
                                 "/insurance-plans/new", "/insurance-plans/*/edit",
-                                "/coverages/new", "/coverages/*/edit").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/members/**", "/insurance-plans/**", "/coverages/**",
-                                "/member/**", "/insurancePlan/**", "/coverage/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/member/**", "/insurancePlan/**", "/coverage/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/members/**", "/insurance-plans/**", "/coverages/**",
-                                "/member/**", "/insurancePlan/**", "/coverage/**").hasRole("ADMIN")
-                        .requestMatchers("/officers/**").hasRole("ADMIN")
-                        .requestMatchers("/providers/**").hasRole("ADMIN")
-                        .requestMatchers("/users/**").hasRole("ADMIN")
-                        .requestMatchers("/dashboard", "/members/**", "/insurance-plans/**", "/coverages/**").hasAnyRole("ADMIN", "OFFICER")
-                        .anyRequest().authenticated())
+                                "/coverages/new", "/coverages/*/edit").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/claims", "/claims/*/update", "/claims/*/delete",
+                                "/payments", "/payments/*/update", "/payments/*/delete",
+                                "/members/**", "/insurance-plans/**", "/coverages/**",
+                                "/providers/**", "/officers/**", "/users/**",
+                                "/api/insurance-plans/**", "/api/coverage/**",
+                                "/api/payments/**", "/api/providers/**", "/api/officers/**", "/api/users/**")
+                                .hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/insurance-plans/**",
+                                "/api/coverage/**", "/api/payments/**", "/api/providers/**",
+                                "/api/officers/**", "/api/users/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/members/**", "/api/insurance-plans/**",
+                                "/api/coverage/**", "/api/payments/**", "/api/providers/**",
+                                "/api/officers/**", "/api/users/**").hasRole("ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/members/**", "/insurance-plans/**",
+                                "/coverages/**", "/claims/**", "/payments/**",
+                                "/api/members/**", "/api/insurance-plans/**", "/api/coverage/**",
+                                "/api/claims/**", "/api/payments/**")
+                                .hasAnyRole("ADMINISTRATOR", "INSURANCE_OFFICER")
+                        .anyRequest().denyAll())
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/dashboard", true)
                         .permitAll())
+                .exceptionHandling(exception -> exception.accessDeniedPage("/access-denied"))
+                .sessionManagement(session -> session
+                        .maximumSessions(-1)
+                        .sessionRegistry(sessionRegistry))
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
                         .permitAll());
         return http.build();
     }
 
-    private String mapRoleToAuthority(String role) {
-        if (role == null || role.isBlank()) {
-            return "USER";
-        }
-        if ("Administrator".equalsIgnoreCase(role.trim())) {
-            return "ADMIN";
-        }
-        if ("Insurance Officer".equalsIgnoreCase(role.trim())) {
-            return "OFFICER";
-        }
-        return "USER";
-    }
 }

@@ -2,6 +2,7 @@ package claim.service;
 
 import claim.domain.Claim;
 import claim.repository.ClaimRepository;
+import base.BusinessIdGenerator;
 import exception.BusinessRuleException;
 import healthcareProvider.domain.HealthcareProvider;
 import healthcareProvider.repository.HealthcareProviderRepository;
@@ -31,6 +32,8 @@ class ClaimServiceImplTest {
     @Mock
     private ClaimRepository claimRepository;
     @Mock
+    private BusinessIdGenerator businessIdGenerator;
+    @Mock
     private MemberRepository memberRepository;
     @Mock
     private HealthcareProviderRepository providerRepository;
@@ -43,8 +46,8 @@ class ClaimServiceImplTest {
     @Test
     void createShouldStartClaimAsPendingWithoutDecisionInformation() {
         Claim claim = validClaim();
-        when(claimRepository.existsByClaimId("CLM-1")).thenReturn(false);
-        when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(claim.getMember()));
+        when(businessIdGenerator.nextClaimId()).thenReturn("CLM-001");
+        when(memberRepository.findById("1199887766554433")).thenReturn(Optional.of(claim.getMember()));
         when(providerRepository.findById(claim.getHealthcareProvider().getId()))
                 .thenReturn(Optional.of(claim.getHealthcareProvider()));
         when(claimRepository.save(claim)).thenReturn(claim);
@@ -60,8 +63,8 @@ class ClaimServiceImplTest {
     void createShouldRejectClaimAbovePlanCoverageLimit() {
         Claim claim = validClaim();
         claim.setAmountClaimed(1001);
-        when(claimRepository.existsByClaimId("CLM-1")).thenReturn(false);
-        when(memberRepository.findById("NAT-1")).thenReturn(Optional.of(claim.getMember()));
+        when(businessIdGenerator.nextClaimId()).thenReturn("CLM-001");
+        when(memberRepository.findById("1199887766554433")).thenReturn(Optional.of(claim.getMember()));
         when(providerRepository.findById(claim.getHealthcareProvider().getId()))
                 .thenReturn(Optional.of(claim.getHealthcareProvider()));
 
@@ -93,14 +96,14 @@ class ClaimServiceImplTest {
         plan.setCoverageLimit(1000);
 
         Member member = new Member();
-        member.setNationalId("NAT-1");
+        member.setNationalId("1199887766554433");
         member.setInsurancePlan(plan);
 
         HealthcareProvider provider = new HealthcareProvider();
         provider.setId(UUID.randomUUID());
 
         Claim claim = new Claim();
-        claim.setClaimId("CLM-1");
+        claim.setClaimId("CLM-001");
         claim.setClaimDate(LocalDate.now());
         claim.setDescription("Consultation");
         claim.setAmountClaimed(500);

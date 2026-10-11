@@ -5,6 +5,7 @@ import exception.DuplicateResourceException;
 import exception.ResourceNotFoundException;
 import exception.ValidationException;
 import claim.repository.ClaimRepository;
+import base.BusinessIdGenerator;
 import insuranceOfficer.domain.InsuranceOfficer;
 import insuranceOfficer.repository.InsuranceOfficerRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,15 +21,16 @@ public class InsuranceOfficerServiceImpl implements InsuranceOfficerService {
 
     private final InsuranceOfficerRepository officerRepository;
     private final ClaimRepository claimRepository;
+    private final BusinessIdGenerator businessIdGenerator;
 
     @Override
     @Transactional
     public InsuranceOfficer create(InsuranceOfficer officer) {
-        validate(officer, true);
-        officer.setOfficerId(officer.getOfficerId().trim());
-        if (officerRepository.existsByOfficerId(officer.getOfficerId())) {
-            throw new DuplicateResourceException("Insurance Officer ID already exists.");
+        if (officer == null) {
+            throw new ValidationException("Insurance Officer data is required.");
         }
+        officer.setOfficerId(businessIdGenerator.nextOfficerId());
+        validate(officer, false);
         normalize(officer);
         return officerRepository.save(officer);
     }
@@ -87,9 +89,6 @@ public class InsuranceOfficerServiceImpl implements InsuranceOfficerService {
     private void validate(InsuranceOfficer officer, boolean requireId) {
         if (officer == null) {
             throw new ValidationException("Insurance Officer data is required.");
-        }
-        if (requireId && (officer.getOfficerId() == null || officer.getOfficerId().isBlank())) {
-            throw new ValidationException("Insurance Officer ID is required.");
         }
         if (officer.getFullName() == null || officer.getFullName().isBlank()) {
             throw new ValidationException("Insurance Officer name is required.");

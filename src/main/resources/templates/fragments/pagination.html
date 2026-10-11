@@ -1,0 +1,10 @@
+<nav th:fragment="controls" class="pagination" aria-label="Pagination"
+     th:if="${totalPages > 1}">
+    <a class="action-link"
+       th:if="${hasPreviousPage}"
+       th:href="${previousPageUrl}">Previous</a>
+    <span th:text="'Page ' + ${currentPage} + ' of ' + ${totalPages}">Page 1 of 1</span>
+    <a class="action-link"
+       th:if="${hasNextPage}"
+       th:href="${nextPageUrl}">Next</a>
+</nav>

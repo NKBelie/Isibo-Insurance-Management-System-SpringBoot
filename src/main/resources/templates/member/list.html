@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,22 +16,31 @@
             <div th:replace="~{fragments/alerts :: alerts}"></div>
 
             <div class="page-header">
-                <h2>Members</h2>
+                <div>
+                    <p class="eyebrow">Member management</p>
+                    <h2>Members</h2>
+                    <p class="page-description">Find members and review their insurance status and plan.</p>
+                </div>
                 <div class="page-actions">
-                    <a class="btn btn-primary" th:href="@{/members/new}">Register Member</a>
+                    <a class="btn btn-primary" sec:authorize="hasAnyRole('ADMINISTRATOR', 'INSURANCE_OFFICER')" th:href="@{/members/new}">Register Member</a>
                 </div>
             </div>
 
             <div class="table-shell">
-                <div class="table-toolbar">
+                <form class="table-toolbar" method="get" th:action="@{/members}">
                     <div class="filter-row">
-                        <input id="member-search" type="text" placeholder="Search member" th:value="${search}" />
-                        <select id="member-status-filter" aria-label="Filter by status">
+                        <input id="member-search" type="search" name="search" placeholder="Search name, member ID, national ID or email"
+                               th:value="${search}" aria-label="Search members" />
+                        <select id="member-status-filter" name="status" aria-label="Filter members by status">
                             <option value="">All Status</option>
-                            <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}" th:selected="${status == selectedStatus}"></option>
+                            <option th:each="option : ${statuses}" th:value="${option}" th:text="${option}"
+                                    th:selected="${#strings.equalsIgnoreCase(option, status)}"></option>
                         </select>
+                        <button class="btn btn-secondary" type="submit">Apply filters</button>
+                        <a class="filter-clear" th:if="${search != null or status != null}" th:href="@{/members}">Clear</a>
                     </div>
-                </div>
+                    <p class="result-count" th:text="'Showing ' + ${pageStart} + '–' + ${pageEnd} + ' of ' + ${filteredCount} + ' members'">0 members</p>
+                </form>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead>
@@ -48,7 +57,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="member : ${members}" th:data-member-row="${member.nationalId}" th:data-status="${member.status}">
+                        <tr th:each="member : ${members}">
                             <td th:text="${member.memberId}">MEM-001</td>
                             <td th:text="${member.nationalId}">1199887766554433</td>
                             <td th:text="${member.firstName + ' ' + member.lastName}">Belie Ndayisaba</td>
@@ -63,8 +72,8 @@
                             <td>
                                 <div class="action-group">
                                     <a class="action-link primary" th:href="@{/members/{id}(id=${member.nationalId})}">View</a>
-                                    <a class="action-link" th:href="@{/members/{id}/edit(id=${member.nationalId})}">Edit</a>
-                                    <form th:action="@{/members/{id}/delete(id=${member.nationalId})}" method="post" style="display:inline;">
+                                    <a class="action-link" sec:authorize="hasAnyRole('ADMINISTRATOR', 'INSURANCE_OFFICER')" th:href="@{/members/{id}/edit(id=${member.nationalId})}">Edit</a>
+                                    <form sec:authorize="hasRole('ADMINISTRATOR')" th:action="@{/members/{id}/delete(id=${member.nationalId})}" method="post" style="display:inline;">
                                         <button class="action-link danger" type="submit" data-confirm-delete="Delete Member? This action cannot be undone.">Delete</button>
                                     </form>
                                 </div>
@@ -81,11 +90,11 @@
                         </tbody>
                     </table>
                 </div>
+                <div th:replace="~{fragments/pagination :: controls}"></div>
             </div>
         </main>
     </div>
 </div>
 <script th:src="@{/js/app.js}"></script>
-<script th:src="@{/js/member.js}"></script>
 </body>
 </html>

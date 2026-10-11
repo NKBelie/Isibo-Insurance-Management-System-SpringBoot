@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0B2545" />
+    <title>Access denied | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/auth.css}" />
+</head>
+<body class="auth-page">
+<main class="auth-layout access-denied-layout">
+    <aside class="auth-brand-panel">
+        <a class="auth-wordmark" th:href="@{/login}" aria-label="ISIBO Insurance home">
+            <span class="auth-logo" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3.5 27 7.8v7.1c0 7-4.5 11.7-11 14.3C9.5 26.6 5 21.9 5 14.9V7.8L16 3.5Z" stroke="currentColor" stroke-width="2"/><path d="M16 10v12M10 16h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span>
+            <span>ISIBO <small>INSURANCE</small></span>
+        </a>
+        <div class="auth-brand-copy">
+            <p class="auth-overline">ISIBO secure workspace</p>
+            <h1>Your access is protected.</h1>
+            <p>Workspace permissions help keep insurance information secure and accessible to the right people.</p>
+        </div>
+        <p class="auth-brand-footer">ISIBO Insurance Management System</p>
+    </aside>
+    <section class="auth-form-panel">
+        <div class="auth-form-wrap access-denied-copy">
+            <div class="access-denied-symbol" aria-hidden="true">403</div>
+            <p class="auth-overline">Permission required</p>
+            <h2>Access denied</h2>
+            <p>You don't have permission to access this page. If you believe this is a mistake, contact your administrator.</p>
+            <a class="auth-submit auth-return-link" th:href="@{/dashboard}">Return to your workspace</a>
+            <p class="auth-switch"><a th:href="@{/login}">Sign in with another account</a></p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

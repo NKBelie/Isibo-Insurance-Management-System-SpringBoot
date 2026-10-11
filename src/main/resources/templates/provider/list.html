@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,9 +15,13 @@
         <main class="page-content">
             <div th:replace="~{fragments/alerts :: alerts}"></div>
             <div class="page-header">
-                <h2>Healthcare Providers</h2>
+                <div>
+                    <p class="eyebrow">Provider directory</p>
+                    <h2>Healthcare Providers</h2>
+                    <p class="page-description">Maintain the providers available for insurance claims.</p>
+                </div>
                 <div class="page-actions">
-                    <a class="btn btn-primary" th:href="@{/providers/new}">Register Provider</a>
+                    <a class="btn btn-primary" sec:authorize="hasRole('ADMINISTRATOR')" th:href="@{/providers/new}">Register Provider</a>
                 </div>
             </div>
 
@@ -32,7 +36,9 @@
                                     th:selected="${#strings.equalsIgnoreCase(option, specialty)}">Specialty</option>
                         </select>
                         <button class="btn btn-secondary" type="submit">Filter</button>
+                        <a class="filter-clear" th:if="${search != null or specialty != null}" th:href="@{/providers}">Clear</a>
                     </div>
+                    <p class="result-count" th:text="'Showing ' + ${pageStart} + '–' + ${pageEnd} + ' of ' + ${filteredCount} + ' providers'">0 providers</p>
                 </form>
                 <div class="table-wrap">
                     <table class="data-table">
@@ -48,7 +54,7 @@
                         </thead>
                         <tbody>
                         <tr th:each="provider : ${providers}">
-                            <td th:text="${provider.providerId}">PROV-001</td>
+                            <td th:text="${provider.providerId}">HCP-001</td>
                             <td th:text="${provider.name}">Healthcare Provider</td>
                             <td th:text="${provider.specialty}">General</td>
                             <td th:text="${provider.contactNumber}">+250788000000</td>
@@ -74,6 +80,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div th:replace="~{fragments/pagination :: controls}"></div>
             </div>
         </main>
     </div>

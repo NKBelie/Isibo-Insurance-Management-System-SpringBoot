@@ -1,12 +1,21 @@
 package user.service;
 
 import exception.DuplicateResourceException;
+import exception.BusinessRuleException;
 import exception.ResourceNotFoundException;
 import exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import insurancePlan.domain.InsurancePlan;
+import member.domain.Member;
+import member.service.MemberService;
 import user.domain.User;
+import user.domain.SystemRole;
+import user.dto.CustomerRegistrationForm;
+import user.dto.InsuranceApplicationForm;
 import user.repository.UserRepository;
 
 import java.util.List;
@@ -21,23 +30,70 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MemberService memberService;
 
     @Override
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public User registerUser(User user) {
         validateNewUser(user);
 
-        String normalizedRole = user.getRole().trim();
-        if (!("Administrator".equalsIgnoreCase(normalizedRole) || "Insurance Officer".equalsIgnoreCase(normalizedRole))) {
-            throw new ValidationException("Role must be Administrator or Insurance Officer.");
-        }
-
-        return saveNewUser(user, normalizedRole);
+        return saveNewUser(user, SystemRole.from(user.getRole()).name());
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public User registerInsuranceOfficerAccount(User user) {
         validateNewUser(user);
-        return saveNewUser(user, "Insurance Officer");
+        return saveNewUser(user, SystemRole.INSURANCE_OFFICER.name());
+    }
+
+    @Override
+    public User registerCustomerAccount(CustomerRegistrationForm registration) {
+        if (registration == null) {
+            throw new ValidationException("Registration data is required.");
+        }
+
+        User user = new User();
+        user.setUsername(registration.getUsername() == null ? null : registration.getUsername().trim());
+        user.setEmail(registration.getEmail() == null ? null : registration.getEmail().trim());
+        user.setPasswordHash(registration.getPassword());
+        validateNewUser(user);
+        validateUniqueCredentials(user);
+        return saveNewUser(user, SystemRole.CUSTOMER.name());
+    }
+
+    @Override
+    @PreAuthorize("hasRole('CUSTOMER') and #username == authentication.name")
+    @Transactional
+    public Member submitCustomerApplication(String username, InsuranceApplicationForm application) {
+        if (application == null) {
+            throw new ValidationException("Insurance application data is required.");
+        }
+        User user = findByUsername(username);
+        if (SystemRole.from(user.getRole()) != SystemRole.CUSTOMER) {
+            throw new BusinessRuleException("Only customer accounts can submit insurance applications.");
+        }
+        if (user.getMember() != null) {
+            throw new BusinessRuleException("An insurance application has already been submitted for this account.");
+        }
+
+        Member member = new Member();
+        member.setNationalId(application.getNationalId());
+        member.setFirstName(application.getFirstName());
+        member.setLastName(application.getLastName());
+        member.setEmail(user.getEmail());
+        member.setPhone(application.getPhone());
+        member.setDateOfBirth(application.getDateOfBirth());
+        member.setGender(application.getGender());
+        member.setAddress(application.getAddress());
+        member.setStatus("PENDING");
+        InsurancePlan selectedPlan = new InsurancePlan();
+        selectedPlan.setId(application.getInsurancePlanId());
+        member.setInsurancePlan(selectedPlan);
+
+        user.setMember(memberService.registerMember(member));
+        userRepository.save(user);
+        return user.getMember();
     }
 
     private void validateNewUser(User user) {
@@ -54,9 +110,6 @@ public class UserServiceImpl implements UserService {
         if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
             throw new ValidationException("Password is required.");
         }
-        if (user.getRole() == null || user.getRole().isBlank()) {
-            user.setRole("Insurance Officer");
-        }
         if (!EMAIL_PATTERN.matcher(user.getEmail().trim()).matches()) {
             throw new ValidationException("Email must be valid.");
         }
@@ -71,13 +124,7 @@ public class UserServiceImpl implements UserService {
     private User saveNewUser(User user, String role) {
         String username = user.getUsername().trim();
         String email = user.getEmail().trim();
-        if (userRepository.existsByUsername(username)) {
-            throw new DuplicateResourceException("Username already exists.");
-        }
-
-        if (userRepository.existsByEmail(email)) {
-            throw new DuplicateResourceException("Email already exists.");
-        }
+        validateUniqueCredentials(user);
 
         user.setUsername(username);
         user.setEmail(email);
@@ -86,7 +133,20 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    private void validateUniqueCredentials(User user) {
+        String username = user.getUsername().trim();
+        String email = user.getEmail().trim();
+        if (userRepository.existsByUsername(username)) {
+            throw new DuplicateResourceException("Username already exists.");
+        }
+
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateResourceException("Email already exists.");
+        }
+    }
+
     @Override
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public User findById(UUID id) {
         if (id == null) {
             throw new ValidationException("User ID is required.");
@@ -96,6 +156,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMINISTRATOR') or #username == authentication.name")
     public User findByUsername(String username) {
         if (username == null || username.isBlank()) {
             throw new ValidationException("Username is required.");
@@ -105,11 +166,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public List<User> findAllUsers() {
         return userRepository.findAll();
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public User updateUser(UUID id, User user) {
         User existing = findById(id);
 
@@ -118,28 +181,35 @@ public class UserServiceImpl implements UserService {
         }
 
         if (user.getUsername() != null && !user.getUsername().isBlank()) {
-            if (!user.getUsername().equals(existing.getUsername()) && userRepository.existsByUsername(user.getUsername())) {
+            String username = user.getUsername().trim();
+            if (!username.equals(existing.getUsername()) && userRepository.existsByUsername(username)) {
                 throw new DuplicateResourceException("Username already exists.");
             }
-            existing.setUsername(user.getUsername());
+            if (username.length() < 3 || username.length() > 60) {
+                throw new ValidationException("Username must be between 3 and 60 characters.");
+            }
+            existing.setUsername(username);
         }
 
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            if (!user.getEmail().equalsIgnoreCase(existing.getEmail()) && userRepository.existsByEmail(user.getEmail())) {
+            String email = user.getEmail().trim();
+            if (!EMAIL_PATTERN.matcher(email).matches()) {
+                throw new ValidationException("Email must be valid.");
+            }
+            if (!email.equalsIgnoreCase(existing.getEmail()) && userRepository.existsByEmail(email)) {
                 throw new DuplicateResourceException("Email already exists.");
             }
-            existing.setEmail(user.getEmail());
+            existing.setEmail(email);
         }
 
         if (user.getRole() != null && !user.getRole().isBlank()) {
-            String normalizedRole = user.getRole().trim();
-            if (!("Administrator".equalsIgnoreCase(normalizedRole) || "Insurance Officer".equalsIgnoreCase(normalizedRole))) {
-                throw new ValidationException("Role must be Administrator or Insurance Officer.");
-            }
-            existing.setRole(normalizedRole);
+            existing.setRole(SystemRole.from(user.getRole()).name());
         }
 
         if (user.getPasswordHash() != null && !user.getPasswordHash().isBlank()) {
+            if (user.getPasswordHash().length() < 8) {
+                throw new ValidationException("Password must be at least 8 characters.");
+            }
             existing.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         }
 
@@ -147,8 +217,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
     public void deleteUser(UUID id) {
         User existing = findById(id);
+        if (SystemRole.from(existing.getRole()) == SystemRole.CUSTOMER) {
+            throw new BusinessRuleException("Customer accounts are linked to insurance applications and cannot be deleted here.");
+        }
         userRepository.delete(existing);
     }
 }

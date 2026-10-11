@@ -1,7 +1,7 @@
 package healthcareProvider.service;
 
-import exception.DuplicateResourceException;
 import exception.ValidationException;
+import base.BusinessIdGenerator;
 import healthcareProvider.domain.HealthcareProvider;
 import healthcareProvider.repository.HealthcareProviderRepository;
 import org.junit.jupiter.api.Test;
@@ -20,6 +20,8 @@ class HealthcareProviderServiceImplTest {
 
     @Mock
     private HealthcareProviderRepository providerRepository;
+    @Mock
+    private BusinessIdGenerator businessIdGenerator;
 
     @InjectMocks
     private HealthcareProviderServiceImpl providerService;
@@ -29,34 +31,37 @@ class HealthcareProviderServiceImplTest {
         HealthcareProvider provider = validProvider();
         provider.setName("  Kigali Hospital  ");
 
-        when(providerRepository.existsByProviderId("PROV-1")).thenReturn(false);
+        when(businessIdGenerator.nextProviderId()).thenReturn("HCP-001");
         when(providerRepository.save(provider)).thenReturn(provider);
 
         HealthcareProvider saved = providerService.create(provider);
 
         assertEquals("Kigali Hospital", saved.getName());
+        assertEquals("HCP-001", saved.getProviderId());
         verify(providerRepository).save(provider);
     }
 
     @Test
-    void createShouldRejectDuplicateProviderId() {
+    void createShouldAssignProviderIdWithoutUsingSubmittedValue() {
         HealthcareProvider provider = validProvider();
-        when(providerRepository.existsByProviderId("PROV-1")).thenReturn(true);
+        when(businessIdGenerator.nextProviderId()).thenReturn("HCP-002");
+        when(providerRepository.save(provider)).thenReturn(provider);
 
-        assertThrows(DuplicateResourceException.class, () -> providerService.create(provider));
+        assertEquals("HCP-002", providerService.create(provider).getProviderId());
     }
 
     @Test
     void createShouldRejectInvalidContactNumber() {
         HealthcareProvider provider = validProvider();
         provider.setContactNumber("not-a-phone");
+        when(businessIdGenerator.nextProviderId()).thenReturn("HCP-003");
 
         assertThrows(ValidationException.class, () -> providerService.create(provider));
     }
 
     private HealthcareProvider validProvider() {
         HealthcareProvider provider = new HealthcareProvider();
-        provider.setProviderId("PROV-1");
+        provider.setProviderId("HCP-001");
         provider.setName("Kigali Hospital");
         provider.setAddress("Kigali");
         provider.setContactNumber("+250788123456");

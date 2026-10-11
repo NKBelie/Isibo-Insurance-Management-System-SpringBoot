@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports | ISIBO</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}" />
+    <link rel="stylesheet" th:href="@{/css/tables.css}" />
+    <link rel="stylesheet" th:href="@{/css/reports.css}" />
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-panel">
+        <div th:replace="~{fragments/header :: header}"></div>
+        <main class="page-content">
+            <div class="page-header">
+                <div>
+                    <p class="eyebrow">Administration</p>
+                    <h2>Reports</h2>
+                    <p class="report-description">Current operational totals from registered members, plans, claims, and payments.</p>
+                </div>
+            </div>
+
+            <section class="report-metrics" aria-label="Operational totals">
+                <article class="report-metric">
+                    <span>Members</span>
+                    <strong th:text="${reportMemberCount}">0</strong>
+                </article>
+                <article class="report-metric">
+                    <span>Claims</span>
+                    <strong th:text="${reportClaimCount}">0</strong>
+                </article>
+                <article class="report-metric">
+                    <span>Payments recorded</span>
+                    <strong th:text="${reportPaymentCount}">0</strong>
+                </article>
+                <article class="report-metric">
+                    <span>Total payment amount</span>
+                    <strong th:text="${#numbers.formatDecimal(reportPaymentTotal, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</strong>
+                </article>
+            </section>
+
+            <div class="report-grid">
+                <section class="panel-card">
+                    <div class="panel-header"><h3>Members by status</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <caption class="visually-hidden">Registered members grouped by current status</caption>
+                            <thead><tr><th scope="col">Status</th><th scope="col">Members</th></tr></thead>
+                            <tbody>
+                            <tr th:each="entry : ${reportMemberStatuses}">
+                                <th scope="row" th:text="${entry.key}">ACTIVE</th>
+                                <td th:text="${entry.value}">0</td>
+                            </tr>
+                            <tr th:if="${#maps.isEmpty(reportMemberStatuses)}"><td colspan="2"><div class="empty-state"><h4>No member records</h4><p>Member status totals appear after registrations are recorded.</p></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <div class="panel-header"><h3>Claims by status</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <caption class="visually-hidden">Claims grouped by current status</caption>
+                            <thead><tr><th scope="col">Status</th><th scope="col">Claims</th></tr></thead>
+                            <tbody>
+                            <tr th:each="entry : ${reportClaimStatuses}">
+                                <th scope="row" th:text="${entry.key}">PENDING</th>
+                                <td th:text="${entry.value}">0</td>
+                            </tr>
+                            <tr th:if="${#maps.isEmpty(reportClaimStatuses)}"><td colspan="2"><div class="empty-state"><h4>No claims recorded</h4><p>Claim status totals will appear when claims are submitted.</p></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <div class="panel-header"><h3>Members by insurance plan</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <caption class="visually-hidden">Number of members registered for each insurance plan</caption>
+                            <thead><tr><th scope="col">Insurance plan</th><th scope="col">Plan status</th><th scope="col">Members</th></tr></thead>
+                            <tbody>
+                            <tr th:each="item : ${reportPlans}">
+                                <th scope="row" th:text="${item.plan.insurancePlanName}">Plan</th>
+                                <td th:text="${item.plan.status}">ACTIVE</td>
+                                <td th:text="${item.memberCount}">0</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(reportPlans)}"><td colspan="3"><div class="empty-state"><h4>No insurance plans</h4><p>Create an insurance plan to begin using this report.</p></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="panel-card">
+                    <div class="panel-header"><h3>Latest recorded payments</h3></div>
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <caption class="visually-hidden">The ten most recent recorded payments</caption>
+                            <thead><tr><th scope="col">Payment</th><th scope="col">Member</th><th scope="col">Date</th><th scope="col">Amount</th></tr></thead>
+                            <tbody>
+                            <tr th:each="payment : ${reportLatestPayments}">
+                                <th scope="row" th:text="${payment.paymentId}">PAY-001</th>
+                                <td th:text="${payment.member.memberId}">MEM-001</td>
+                                <td th:text="${payment.paymentDate}">2026-10-01</td>
+                                <td th:text="${#numbers.formatDecimal(payment.amount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(reportLatestPayments)}"><td colspan="4"><div class="empty-state"><h4>No payments recorded</h4><p>Recorded payments will appear here.</p></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

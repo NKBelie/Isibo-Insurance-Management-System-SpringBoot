@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,7 +16,10 @@
             <div th:replace="~{fragments/alerts :: alerts}"></div>
 
             <div class="page-header">
-                <h2>Insurance Plan Details</h2>
+                <div>
+                    <p class="eyebrow">Plan overview</p>
+                    <h2>Insurance Plan Details</h2>
+                </div>
                 <div class="page-actions">
                     <a class="btn btn-secondary" th:href="@{/insurance-plans}">Back to plans</a>
                 </div>
@@ -30,21 +33,22 @@
                             th:text="${insurancePlan.status}">ACTIVE</span>
                     </div>
                     <div class="action-group">
-                        <a class="action-link" th:href="@{/insurance-plans/{id}/edit(id=${insurancePlan.id})}">Edit</a>
-                        <form th:action="@{/insurance-plans/{id}/delete(id=${insurancePlan.id})}" method="post" style="display:inline;">
+                        <a class="action-link" sec:authorize="hasRole('ADMINISTRATOR')" th:href="@{/insurance-plans/{id}/edit(id=${insurancePlan.id})}">Edit plan</a>
+                        <form sec:authorize="hasRole('ADMINISTRATOR')" th:action="@{/insurance-plans/{id}/delete(id=${insurancePlan.id})}" method="post" style="display:inline;">
                             <button class="action-link danger" type="submit" data-confirm-delete="Delete Insurance Plan?">Delete</button>
                         </form>
                     </div>
                 </div>
 
+                <div class="plan-detail-summary" aria-label="Plan usage">
+                    <div><span>Members enrolled</span><strong th:text="${memberCount}">0</strong></div>
+                    <div><span>Coverage benefits</span><strong th:text="${coverageCount}">0</strong></div>
+                </div>
+
                 <div class="detail-grid">
                     <div class="field-group">
                         <label>Plan ID</label>
-                        <span th:text="${insurancePlan.insurancePlanId}">PLAN-001</span>
-                    </div>
-                    <div class="field-group">
-                        <label>Plan Code</label>
-                        <span th:text="${insurancePlan.insurancePlanId}">BASIC</span>
+                        <span th:text="${insurancePlan.insurancePlanId}">PLN-001</span>
                     </div>
                     <div class="field-group">
                         <label>Monthly Premium</label>
@@ -60,10 +64,68 @@
                     </div>
                     <div class="field-group full-span">
                         <label>Description</label>
-                        <span th:text="${insurancePlan.description}">Description</span>
+                        <span th:text="${insurancePlan.description != null and !#strings.isEmpty(insurancePlan.description) ? insurancePlan.description : 'No description provided.'}">Description</span>
                     </div>
                 </div>
             </div>
+
+            <section class="plan-related-section">
+                <div class="plan-related-heading">
+                    <div>
+                        <p class="eyebrow">Enrolled members</p>
+                        <h3>Members on this plan</h3>
+                    </div>
+                    <span class="related-count" th:text="${memberCount + ' member(s)'}">0 members</span>
+                </div>
+                <div class="table-shell">
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Member ID</th><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            <tr th:each="member : ${members}">
+                                <td th:text="${member.memberId}">MEM-001</td>
+                                <td th:text="${member.firstName + ' ' + member.lastName}">Member name</td>
+                                <td th:text="${member.email}">member@example.com</td>
+                                <td><span class="status-badge" th:text="${member.status}"
+                                          th:classappend="${#strings.equalsIgnoreCase(member.status, 'ACTIVE')} ? ' status-active' : ' status-inactive'">PENDING</span></td>
+                                <td><a class="action-link primary" th:href="@{/members/{id}(id=${member.nationalId})}">View member</a></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(members)}">
+                                <td colspan="5"><div class="empty-state"><h4>No members enrolled yet.</h4><p>Members who select this plan will appear here.</p></div></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="plan-related-section">
+                <div class="plan-related-heading">
+                    <div>
+                        <p class="eyebrow">Benefits and limits</p>
+                        <h3>Coverage included</h3>
+                    </div>
+                    <span class="related-count" th:text="${coverageCount + ' benefit(s)'}">0 benefits</span>
+                </div>
+                <div class="table-shell">
+                    <div class="table-wrap">
+                        <table class="data-table">
+                            <thead><tr><th>Coverage ID</th><th>Description</th><th>Coverage amount</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            <tr th:each="coverage : ${coverages}">
+                                <td th:text="${coverage.coverageId}">COV-001</td>
+                                <td th:text="${coverage.description}">Coverage description</td>
+                                <td th:text="${#numbers.formatDecimal(coverage.coverageAmount, 0, 'COMMA', 0, 'POINT') + ' RWF'}">500000 RWF</td>
+                                <td><a class="action-link primary" th:href="@{/coverages/{id}(id=${coverage.id})}">View coverage</a></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(coverages)}">
+                                <td colspan="4"><div class="empty-state"><h4>No coverage benefits added.</h4><p>Add coverage records to describe this plan's benefits.</p></div></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 </div>

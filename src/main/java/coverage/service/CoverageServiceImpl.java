@@ -2,6 +2,7 @@ package coverage.service;
 
 import coverage.domain.Coverage;
 import coverage.repository.CoverageRepository;
+import base.BusinessIdGenerator;
 import exception.BusinessRuleException;
 import exception.DuplicateResourceException;
 import exception.ResourceNotFoundException;
@@ -21,15 +22,16 @@ public class CoverageServiceImpl implements CoverageService {
 
     private final CoverageRepository coverageRepository;
     private final InsurancePlanRepository insurancePlanRepository;
+    private final BusinessIdGenerator businessIdGenerator;
 
     @Override
     @Transactional
     public Coverage registerCoverage(Coverage coverage) {
-        validateCoverageForCreate(coverage);
-
-        if (coverageRepository.existsByCoverageId(coverage.getCoverageId())) {
-            throw new DuplicateResourceException("Coverage ID already exists.");
+        if (coverage == null) {
+            throw new ValidationException("Coverage data is required.");
         }
+        coverage.setCoverageId(businessIdGenerator.nextCoverageId());
+        validateCoverageForCreate(coverage);
 
         if (coverageRepository.existsByDescriptionIgnoreCase(coverage.getDescription())) {
             throw new DuplicateResourceException("Coverage description already exists.");
@@ -63,6 +65,15 @@ public class CoverageServiceImpl implements CoverageService {
     @Override
     public List<Coverage> findAllCoverage() {
         return coverageRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Coverage> findByInsurancePlanId(UUID insurancePlanId) {
+        if (insurancePlanId == null) {
+            throw new ValidationException("Insurance Plan ID is required.");
+        }
+        return coverageRepository.findByInsurancePlan_Id(insurancePlanId);
     }
 
     @Override
@@ -146,10 +157,6 @@ public class CoverageServiceImpl implements CoverageService {
     }
 
     private void validateCoverageState(Coverage coverage) {
-        if (coverage.getCoverageId() == null || coverage.getCoverageId().isBlank()) {
-            throw new ValidationException("Coverage ID is required.");
-        }
-
         if (coverage.getDescription() == null || coverage.getDescription().isBlank()) {
             throw new ValidationException("Coverage description is required.");
         }

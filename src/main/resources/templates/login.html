@@ -3,34 +3,108 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login | ISIBO</title>
+    <meta name="theme-color" content="#0B2545" />
+    <title>Sign in | ISIBO</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/auth.css}" />
 </head>
 <body class="auth-page">
-<div class="auth-card">
-    <h1>ISIBO Login</h1>
-    <p class="subtle">Insurance Management System</p>
-
-    <div th:if="${param.error}" class="alert alert-error">
-        Invalid username or password.
-    </div>
-    <div th:if="${param.logout}" class="alert alert-success">
-        You have been logged out.
-    </div>
-    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-
-    <form th:action="@{/login}" method="post">
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required />
+<main class="auth-layout" aria-labelledby="login-title">
+    <aside class="auth-brand-panel">
+        <a class="auth-wordmark" th:href="@{/login}" aria-label="ISIBO Insurance home">
+            <span class="auth-logo" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none">
+                    <path d="M16 3.5 27 7.8v7.1c0 7-4.5 11.7-11 14.3C9.5 26.6 5 21.9 5 14.9V7.8L16 3.5Z" stroke="currentColor" stroke-width="2"/>
+                    <path d="M16 10v12M10 16h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+                </svg>
+            </span>
+            <span>ISIBO <small>INSURANCE</small></span>
+        </a>
+        <div class="auth-brand-copy">
+            <p class="auth-overline">Your coverage workspace</p>
+            <h1>Healthcare coverage, managed with confidence.</h1>
+            <p>Access your insurance workspace to manage members, coverage, claims, and payments securely.</p>
+            <ul class="auth-trust-list">
+                <li>
+                    <span class="trust-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 20 6v5.2c0 5.1-3.3 8.5-8 10.4-4.7-1.9-8-5.3-8-10.4V6l8-3Z" stroke="currentColor" stroke-width="1.7"/><path d="m8.5 12 2.3 2.3 4.8-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Secure account access
+                </li>
+                <li>
+                    <span class="trust-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h14v15H5zM8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Reliable insurance records
+                </li>
+                <li>
+                    <span class="trust-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M4 18.5h16M6 15l4-4 3 2 5-6M15 7h3v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    Streamlined claims management
+                </li>
+            </ul>
         </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required />
+        <p class="auth-brand-footer">A dependable place to manage your insurance services.</p>
+    </aside>
+
+    <section class="auth-form-panel">
+        <div class="auth-form-wrap">
+            <a class="auth-mobile-brand" th:href="@{/login}">
+                <span class="auth-logo" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" fill="none"><path d="M16 3.5 27 7.8v7.1c0 7-4.5 11.7-11 14.3C9.5 26.6 5 21.9 5 14.9V7.8L16 3.5Z" stroke="currentColor" stroke-width="2"/><path d="M16 10v12M10 16h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                </span>
+                <span>ISIBO <small>INSURANCE</small></span>
+            </a>
+            <header class="auth-heading">
+                <p class="auth-overline">Customer and staff portal</p>
+                <h2 id="login-title">Welcome back</h2>
+                <p>Sign in to your ISIBO account to continue.</p>
+            </header>
+
+            <div class="auth-feedback" aria-live="polite" aria-atomic="true">
+                <div th:if="${param.error}" class="auth-message auth-message-error" role="alert">
+                    Unable to sign in with those credentials. Check your details and try again.
+                </div>
+                <div th:if="${param.logout}" class="auth-message auth-message-success" role="status">
+                    You have been signed out securely.
+                </div>
+                <div th:if="${param.expired}" class="auth-message auth-message-info" role="status">
+                    Your session ended. Sign in again to continue.
+                </div>
+                <div th:if="${successMessage}" class="auth-message auth-message-success" role="status" th:text="${successMessage}"></div>
+            </div>
+
+            <form class="auth-form" th:action="@{/login}" method="post" data-auth-form>
+                <div class="auth-field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" autocomplete="username"
+                           autocapitalize="none" spellcheck="false" required autofocus />
+                </div>
+                <div class="auth-field">
+                    <label for="password">Password</label>
+                    <div class="auth-password-control">
+                        <input type="password" id="password" name="password" autocomplete="current-password"
+                               aria-describedby="password-help" required />
+                        <button class="password-toggle" type="button" data-password-toggle="password"
+                                aria-label="Show password" aria-pressed="false">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>
+                        </button>
+                    </div>
+                    <small id="password-help" class="field-hint">Your password is protected and never displayed.</small>
+                </div>
+                <button class="auth-submit" type="submit" data-submit-label="Signing in…">Sign in</button>
+            </form>
+
+            <div class="auth-security-note">
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.5 16 5v4c0 3.8-2.5 6.4-6 7.9C6.5 15.4 4 12.8 4 9V5l6-2.5Z" stroke="currentColor" stroke-width="1.5"/><path d="m7.5 9.8 1.7 1.7 3.5-3.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Protected sign-in to your private insurance workspace.</span>
+            </div>
+            <p class="auth-switch">New to ISIBO? <a th:href="@{/register}">Create an account</a></p>
+            <p class="auth-copyright">ISIBO Insurance Management System</p>
         </div>
-        <button type="submit" class="btn btn-primary full-width">Sign In</button>
-    </form>
-    <p class="subtle">Need an account? <a th:href="@{/register}">Register as an Insurance Officer</a></p>
-</div>
+    </section>
+</main>
+<script th:src="@{/js/auth.js}" defer></script>
 </body>
 </html>

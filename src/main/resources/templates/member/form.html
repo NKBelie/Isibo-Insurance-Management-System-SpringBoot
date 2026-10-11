@@ -26,12 +26,11 @@
                 <form th:action="${member.nationalId != null ? '/members/' + member.nationalId + '/update' : '/members'}" method="post" class="entity-form">
                     <div class="form-grid two-columns">
                         <div class="field-group">
-                            <label for="memberId">Member ID</label>
-                            <input id="memberId" name="memberId" type="text" th:value="${member.memberId}" required />
-                        </div>
-                        <div class="field-group">
                             <label for="nationalId">National ID</label>
-                            <input id="nationalId" name="nationalId" type="text" th:value="${member.nationalId}" required />
+                            <input id="nationalId" name="nationalId" type="text" inputmode="numeric"
+                                   pattern="[0-9]{16}" minlength="16" maxlength="16"
+                                   title="Enter exactly 16 digits." th:value="${member.nationalId}" required />
+                            <small>Enter the 16-digit National ID without spaces.</small>
                         </div>
                         <div class="field-group">
                             <label for="firstName">First Name</label>
@@ -57,8 +56,10 @@
                             <label for="status">Status</label>
                             <select id="status" name="status" required>
                                 <option value="ACTIVE" th:selected="${member.status == 'ACTIVE'}">ACTIVE</option>
-                                <option value="INACTIVE" th:selected="${member.status == 'INACTIVE'}">INACTIVE</option>
                                 <option value="PENDING" th:selected="${member.status == 'PENDING'}">PENDING</option>
+                                <option value="INACTIVE" th:selected="${member.status == 'INACTIVE'}">INACTIVE</option>
+                                <option value="REJECTED" th:selected="${member.status == 'REJECTED'}">REJECTED</option>
+                                <option value="EXPIRED" th:selected="${member.status == 'EXPIRED'}">EXPIRED</option>
                             </select>
                         </div>
                         <div class="field-group">

@@ -1,15 +1,15 @@
 :root {
     --primary: #123B6D;
-    --dark: #0B294D;
-    --background: #F6F8FB;
+    --dark: #0B2545;
+    --background: #F5F7FA;
     --white: #FFFFFF;
-    --text: #172033;
-    --muted: #667085;
-    --success: #16834B;
-    --warning: #B7791F;
+    --text: #172B4D;
+    --muted: #64748B;
+    --success: #15803D;
+    --warning: #B45309;
     --error: #D92D20;
     --info: #1570EF;
-    --border: #E6ECF3;
+    --border: #E2E8F0;
     --sidebar-width: 260px;
     --shadow: 0 10px 25px rgba(17, 29, 53, 0.06);
 }
@@ -23,7 +23,7 @@ html, body {
     padding: 0;
     background: var(--background);
     color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Inter, "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 body {
@@ -102,7 +102,6 @@ button, input, select, textarea {
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
     padding: 12px 14px;
     border-radius: 12px;
     color: rgba(255, 255, 255, 0.9);
@@ -112,12 +111,6 @@ button, input, select, textarea {
 .nav-item:hover,
 .nav-item.active {
     background: rgba(255, 255, 255, 0.08);
-}
-
-.nav-icon {
-    width: 18px;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.9);
 }
 
 .sidebar-footer {
@@ -131,7 +124,7 @@ button, input, select, textarea {
 .sidebar-logout .nav-item.danger:hover,
 .sidebar-logout .nav-item.danger:focus-visible {
     background: rgba(217, 45, 32, 0.2);
-    color: var(--white);
+    color: #ffd6d6;
 }
 
 .main-panel {
@@ -218,6 +211,20 @@ button, input, select, textarea {
     border-radius: 12px;
 }
 
+.user-details {
+    display: grid;
+    gap: 2px;
+}
+
+.user-details strong {
+    font-size: 0.9rem;
+}
+
+.user-details small {
+    color: var(--muted);
+    font-size: 0.76rem;
+}
+
 .user-avatar {
     width: 32px;
     height: 32px;
@@ -233,6 +240,9 @@ button, input, select, textarea {
 
 .page-content {
     padding: 26px;
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
 }
 
 .alert-stack {
@@ -271,10 +281,16 @@ button, input, select, textarea {
     cursor: pointer;
     transition: transform 0.2s ease;
     font-weight: 600;
+    min-height: 42px;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
     transform: translateY(-1px);
+}
+
+.btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .btn-primary {
@@ -309,7 +325,7 @@ button, input, select, textarea {
 .page-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     margin-bottom: 22px;
 }
@@ -317,6 +333,18 @@ button, input, select, textarea {
 .page-header h2,
 .page-header h3 {
     margin: 0;
+    color: var(--dark);
+    line-height: 1.25;
+}
+
+.page-header h2 {
+    font-size: clamp(1.45rem, 2.5vw, 1.9rem);
+}
+
+.page-header > div:first-child > .eyebrow {
+    margin-bottom: 7px;
+    color: var(--primary);
+    font-weight: 700;
 }
 
 .page-actions {
@@ -354,26 +382,57 @@ button, input, select, textarea {
 .landing-card {
     display: grid;
     gap: 18px;
-    width: min(520px, calc(100% - 32px));
+    width: min(620px, calc(100% - 32px));
     background: var(--white);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 40px 32px;
-    box-shadow: var(--shadow);
+    border-radius: 22px;
+    padding: clamp(32px, 7vw, 64px);
+    box-shadow: 0 24px 70px rgba(11, 37, 69, 0.12);
     text-align: center;
+}
+
+.landing-card .eyebrow {
+    color: var(--primary);
+    font-weight: 700;
 }
 
 .landing-card h1 {
     margin: 0;
-    font-size: 2.2rem;
+    color: var(--dark);
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+}
+
+.landing-card > p:not(.eyebrow) {
+    max-width: 420px;
+    margin: 0 auto;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.landing-card .btn {
+    justify-self: center;
+    min-width: 190px;
+    margin-top: 8px;
+}
+
+.landing-footnote {
+    font-size: 0.9rem;
+}
+
+.landing-footnote a {
     color: var(--primary);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 .auth-page {
     display: grid;
     place-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #edf3ff, #f6f8fb 50%, #eef6f3);
+    background: var(--background);
 }
 
 .auth-card {
@@ -389,6 +448,36 @@ button, input, select, textarea {
     margin: 0 0 8px;
     color: var(--primary);
     text-align: center;
+}
+
+.auth-brand {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.auth-brand .brand-badge {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: var(--primary);
+    color: var(--white);
+    font-size: 1.15rem;
+}
+
+.auth-brand .eyebrow {
+    margin: 0;
+}
+
+.auth-brand h1 {
+    margin: 0;
+}
+
+.auth-card .form-group input:focus,
+.auth-card .form-group select:focus {
+    border-color: var(--primary);
+    outline: 3px solid rgba(18, 59, 109, 0.12);
 }
 
 .subtle {
@@ -409,6 +498,14 @@ button, input, select, textarea {
 }
 
 .form-group input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: #fff;
+}
+
+.form-group select {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -473,5 +570,18 @@ button, input, select, textarea {
 
     .page-content {
         padding: 18px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-actions {
+        width: 100%;
+    }
+
+    .page-actions .btn {
+        flex: 1 1 auto;
     }
 }

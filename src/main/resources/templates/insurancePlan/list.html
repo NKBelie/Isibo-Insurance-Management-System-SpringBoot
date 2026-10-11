@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,30 +16,55 @@
             <div th:replace="~{fragments/alerts :: alerts}"></div>
 
             <div class="page-header">
-                <h2>Insurance Plans</h2>
+                <div>
+                    <p class="eyebrow">Product management</p>
+                    <h2>Insurance Plans</h2>
+                    <p class="page-description">Manage plan pricing, coverage limits, and availability.</p>
+                </div>
                 <div class="page-actions">
-                    <a class="btn btn-primary" th:href="@{/insurance-plans/new}">Create Insurance Plan</a>
+                    <a class="btn btn-primary" sec:authorize="hasRole('ADMINISTRATOR')" th:href="@{/insurance-plans/new}">Create Insurance Plan</a>
                 </div>
             </div>
 
+            <section class="plan-summary" aria-label="Insurance plan summary">
+                <article class="plan-summary-card">
+                    <span>Total plans</span>
+                    <strong th:text="${activePlanCount + inactivePlanCount}">0</strong>
+                    <small>In the catalogue</small>
+                </article>
+                <article class="plan-summary-card">
+                    <span>Available</span>
+                    <strong th:text="${activePlanCount}">0</strong>
+                    <small>Active for applications</small>
+                </article>
+                <article class="plan-summary-card">
+                    <span>Unavailable</span>
+                    <strong th:text="${inactivePlanCount}">0</strong>
+                    <small>Inactive plans</small>
+                </article>
+            </section>
+
             <div class="table-shell">
-                <div class="table-toolbar">
+                <form class="table-toolbar" method="get" th:action="@{/insurance-plans}">
                     <div class="filter-row">
-                        <input id="insurance-plan-search" type="text" placeholder="Search plan" />
-                        <select id="insurance-plan-status-filter" aria-label="Filter by status">
+                        <input id="insurance-plan-search" type="search" name="search" placeholder="Search plan ID, name or description"
+                               th:value="${search}" aria-label="Search insurance plans" />
+                        <select id="insurance-plan-status-filter" name="status" aria-label="Filter plans by status">
                             <option value="">All Status</option>
-                            <option value="ACTIVE">ACTIVE</option>
-                            <option value="INACTIVE">INACTIVE</option>
+                            <option th:each="option : ${statuses}" th:value="${option}" th:text="${option}"
+                                    th:selected="${#strings.equalsIgnoreCase(option, status)}">ACTIVE</option>
                         </select>
+                        <button class="btn btn-secondary" type="submit">Apply filters</button>
+                        <a class="filter-clear" th:if="${search != null or status != null}" th:href="@{/insurance-plans}">Clear</a>
                     </div>
-                </div>
+                    <p class="result-count" th:text="'Showing ' + ${pageStart} + '–' + ${pageEnd} + ' of ' + ${filteredCount} + ' plans'">0 plans</p>
+                </form>
                 <div class="table-wrap">
                     <table class="data-table">
                         <thead>
                         <tr>
                             <th>Plan ID</th>
                             <th>Plan Name</th>
-                            <th>Plan Code</th>
                             <th>Premium</th>
                             <th>Coverage Limit</th>
                             <th>Duration</th>
@@ -48,10 +73,9 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="plan : ${insurancePlans}" th:data-insurance-plan-row="${plan.id}" th:data-status="${plan.status}">
-                            <td th:text="${plan.insurancePlanId}">PLAN-001</td>
+                        <tr th:each="plan : ${insurancePlans}">
+                            <td th:text="${plan.insurancePlanId}">PLN-001</td>
                             <td th:text="${plan.insurancePlanName}">Basic Plan</td>
-                            <td th:text="${plan.planCode}">BASIC</td>
                             <td th:text="${#numbers.formatDecimal(plan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">100000 RWF</td>
                             <td th:text="${#numbers.formatDecimal(plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">5000000 RWF</td>
                             <td th:text="${plan.durationMonths + ' months'}">12 months</td>
@@ -62,29 +86,29 @@
                             <td>
                                 <div class="action-group">
                                     <a class="action-link primary" th:href="@{/insurance-plans/{id}(id=${plan.id})}">View</a>
-                                    <a class="action-link" th:href="@{/insurance-plans/{id}/edit(id=${plan.id})}">Edit</a>
-                                    <form th:action="@{/insurance-plans/{id}/delete(id=${plan.id})}" method="post" style="display:inline;">
+                                    <a class="action-link" sec:authorize="hasRole('ADMINISTRATOR')" th:href="@{/insurance-plans/{id}/edit(id=${plan.id})}">Edit</a>
+                                    <form sec:authorize="hasRole('ADMINISTRATOR')" th:action="@{/insurance-plans/{id}/delete(id=${plan.id})}" method="post" style="display:inline;">
                                         <button class="action-link danger" type="submit" data-confirm-delete="Delete Insurance Plan?">Delete</button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(insurancePlans)}">
-                            <td colspan="8">
+                            <td colspan="7">
                                 <div class="empty-state">
-                                    <h4>No insurance plans found.</h4>
-                                    <p>Create your first plan to start insuring members.</p>
+                                    <h4 th:text="${search != null or status != null ? 'No plans match these filters.' : 'No insurance plans yet.'}">No insurance plans yet.</h4>
+                                    <p th:if="${search == null and status == null}">Create a plan to make it available for customer applications.</p>
                                 </div>
                             </td>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+                <div th:replace="~{fragments/pagination :: controls}"></div>
             </div>
         </main>
     </div>
 </div>
 <script th:src="@{/js/app.js}"></script>
-<script th:src="@{/js/insurancePlan.js}"></script>
 </body>
 </html>

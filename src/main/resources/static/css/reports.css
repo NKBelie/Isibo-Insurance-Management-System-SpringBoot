@@ -1,0 +1,73 @@
+.report-description {
+    margin: 8px 0 0;
+    color: var(--muted);
+}
+
+.report-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.report-metric {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--white);
+}
+
+.report-metric span {
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
+.report-metric strong {
+    color: var(--text);
+    font-size: clamp(1.25rem, 2vw, 1.8rem);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.report-grid .panel-card {
+    min-width: 0;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 900px) {
+    .report-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    .report-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 360px) {
+    .report-metrics {
+        grid-template-columns: 1fr;
+    }
+}

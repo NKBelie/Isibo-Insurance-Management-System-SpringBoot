@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -30,8 +30,8 @@
                               th:text="${member.status}">ACTIVE</span>
                     </div>
                     <div class="action-group">
-                        <a class="action-link" th:href="@{/members/{id}/edit(id=${member.nationalId})}">Edit</a>
-                        <form th:action="@{/members/{id}/delete(id=${member.nationalId})}" method="post" style="display:inline;">
+                        <a class="action-link" sec:authorize="hasAnyRole('ADMINISTRATOR', 'INSURANCE_OFFICER')" th:href="@{/members/{id}/edit(id=${member.nationalId})}">Edit</a>
+                        <form sec:authorize="hasRole('ADMINISTRATOR')" th:action="@{/members/{id}/delete(id=${member.nationalId})}" method="post" style="display:inline;">
                             <button class="action-link danger" type="submit" data-confirm-delete="Delete Member?">Delete</button>
                         </form>
                     </div>
@@ -44,7 +44,7 @@
                     </div>
                     <div class="field-group">
                         <label>National ID</label>
-                        <span th:text="${member.nationalId}">1199988</span>
+                        <span th:text="${member.nationalId}">1199988776654433</span>
                     </div>
                     <div class="field-group">
                         <label>Email</label>

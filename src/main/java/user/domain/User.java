@@ -1,11 +1,13 @@
 package user.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import member.domain.Member;
 
 @Entity
 @Table(name = "users")
@@ -31,4 +33,9 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @JsonIgnore
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_national_id", unique = true)
+    private Member member;
 }

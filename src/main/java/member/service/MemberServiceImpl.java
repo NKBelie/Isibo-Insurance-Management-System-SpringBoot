@@ -5,6 +5,7 @@ import exception.DuplicateResourceException;
 import exception.ResourceNotFoundException;
 import exception.ValidationException;
 import claim.repository.ClaimRepository;
+import base.BusinessIdGenerator;
 import insurancePlan.domain.InsurancePlan;
 import insurancePlan.repository.InsurancePlanRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import payment.repository.PaymentRepository;
+import user.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,23 +27,26 @@ public class MemberServiceImpl implements MemberService {
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
     );
+    private static final Pattern NATIONAL_ID_PATTERN = Pattern.compile("^[0-9]{16}$");
 
+    private final BusinessIdGenerator businessIdGenerator;
     private final MemberRepository memberRepository;
     private final InsurancePlanRepository insurancePlanRepository;
     private final ClaimRepository claimRepository;
     private final PaymentRepository paymentRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
     public Member registerMember(Member member) {
+        if (member == null) {
+            throw new ValidationException("Member data is required.");
+        }
+        member.setMemberId(businessIdGenerator.nextMemberId());
         validateMemberForCreate(member);
 
         if (memberRepository.existsById(member.getNationalId())) {
             throw new DuplicateResourceException("National ID already exists.");
-        }
-
-        if (memberRepository.existsByMemberId(member.getMemberId())) {
-            throw new DuplicateResourceException("Member ID already exists.");
         }
 
         if (memberRepository.existsByEmailIgnoreCase(member.getEmail())) {
@@ -82,11 +87,9 @@ public class MemberServiceImpl implements MemberService {
 
         Member existing = findMemberById(nationalId);
 
-        if (member.getMemberId() != null && !member.getMemberId().isBlank()) {
-            if (!member.getMemberId().equals(existing.getMemberId())
-                    && memberRepository.existsByMemberId(member.getMemberId())) {
-                throw new DuplicateResourceException("Member ID already exists.");
-            }
+        if (member.getMemberId() != null && !member.getMemberId().isBlank()
+                && !member.getMemberId().equals(existing.getMemberId())) {
+            throw new BusinessRuleException("Member ID cannot be changed.");
         }
 
         if (member.getEmail() != null && !member.getEmail().isBlank()) {
@@ -105,9 +108,6 @@ public class MemberServiceImpl implements MemberService {
 
         validateMemberForUpdate(member, existing);
 
-        if (member.getMemberId() != null && !member.getMemberId().isBlank()) {
-            existing.setMemberId(member.getMemberId());
-        }
         if (member.getFirstName() != null && !member.getFirstName().isBlank()) {
             existing.setFirstName(member.getFirstName());
         }
@@ -144,6 +144,9 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public Member deleteMember(String nationalId) {
         Member existing = findMemberById(nationalId);
+        if (userRepository.existsByMember_NationalId(nationalId)) {
+            throw new BusinessRuleException("Cannot delete a member linked to a customer account. Reject the application instead.");
+        }
         if (claimRepository.existsByMember_NationalId(nationalId)
                 || paymentRepository.existsByMember_NationalId(nationalId)) {
             throw new BusinessRuleException("Cannot delete a member with associated claims or payments.");
@@ -184,8 +187,8 @@ public class MemberServiceImpl implements MemberService {
             throw new ValidationException("National ID is required.");
         }
 
-        if (member.getMemberId() == null || member.getMemberId().isBlank()) {
-            throw new ValidationException("Member ID is required.");
+        if (!NATIONAL_ID_PATTERN.matcher(member.getNationalId()).matches()) {
+            throw new ValidationException("National ID must contain exactly 16 digits.");
         }
 
         if (member.getFirstName() == null || member.getFirstName().isBlank()) {
@@ -230,9 +233,11 @@ public class MemberServiceImpl implements MemberService {
 
         String normalizedStatus = member.getStatus().trim().toUpperCase();
         if (!normalizedStatus.equals("ACTIVE")
+                && !normalizedStatus.equals("PENDING")
                 && !normalizedStatus.equals("INACTIVE")
+                && !normalizedStatus.equals("REJECTED")
                 && !normalizedStatus.equals("EXPIRED")) {
-            throw new ValidationException("Member status must be ACTIVE, INACTIVE, or EXPIRED.");
+            throw new ValidationException("Member status must be PENDING, ACTIVE, INACTIVE, REJECTED, or EXPIRED.");
         }
         member.setStatus(normalizedStatus);
     }
