@@ -48,7 +48,7 @@
                     </div>
                     <div class="customer-details">
                         <div><span>Applicant</span><strong th:text="${customerMember.firstName + ' ' + customerMember.lastName}">Applicant Name</strong></div>
-                        <div><span>Application reference</span><strong th:text="${customerMember.memberId}">MEM-REF</strong></div>
+                        <div><span>Application reference</span><strong th:text="${customerMember.memberId}">MEM-001</strong></div>
                         <div><span>Selected plan</span><strong th:text="${customerMember.insurancePlan.insurancePlanName}">Plan</strong></div>
                         <div><span>Monthly premium</span><strong th:text="${#numbers.formatDecimal(customerMember.insurancePlan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</strong></div>
                         <div><span>Coverage limit</span><strong th:text="${#numbers.formatDecimal(customerMember.insurancePlan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 RWF</strong></div>
@@ -311,7 +311,7 @@
                             </thead>
                             <tbody>
                             <tr th:each="plan : ${recentPlans}">
-                                <td th:text="${plan.insurancePlanId}">PL-001</td>
+                                <td th:text="${plan.insurancePlanId}">PLN-001</td>
                                 <td th:text="${plan.insurancePlanName}">Plan</td>
                                 <td th:text="${#numbers.formatDecimal(plan.monthlyPremium, 0, 'COMMA', 0, 'POINT') + ' RWF'}">50000 RWF</td>
                                 <td th:text="${#numbers.formatDecimal(plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">1000000 RWF</td>
@@ -340,7 +340,7 @@
                         <div class="summary-item" th:each="summary : ${coverageSummary}">
                             <div class="summary-meta">
                                 <strong th:text="${summary.plan.insurancePlanName}">Plan Name</strong>
-                                <span th:text="${summary.plan.insurancePlanId}">PLAN-001</span>
+                                <span th:text="${summary.plan.insurancePlanId}">PLN-001</span>
                             </div>
                             <div>
                                 <strong th:text="${#numbers.formatDecimal(summary.used, 0, 'COMMA', 0, 'POINT') + ' / ' + #numbers.formatDecimal(summary.plan.coverageLimit, 0, 'COMMA', 0, 'POINT') + ' RWF'}">0 / 0 RWF</strong>
