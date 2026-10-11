@@ -1,6 +1,7 @@
 package healthcareProvider.service;
 
 import claim.repository.ClaimRepository;
+import base.BusinessIdGenerator;
 import exception.BusinessRuleException;
 import exception.DuplicateResourceException;
 import exception.ResourceNotFoundException;
@@ -23,15 +24,16 @@ public class HealthcareProviderServiceImpl implements HealthcareProviderService 
 
     private final HealthcareProviderRepository providerRepository;
     private final ClaimRepository claimRepository;
+    private final BusinessIdGenerator businessIdGenerator;
 
     @Override
     @Transactional
     public HealthcareProvider create(HealthcareProvider provider) {
-        validateRequiredFields(provider, true);
-        provider.setProviderId(provider.getProviderId().trim());
-        if (providerRepository.existsByProviderId(provider.getProviderId())) {
-            throw new DuplicateResourceException("Provider ID already exists.");
+        if (provider == null) {
+            throw new ValidationException("Provider data is required.");
         }
+        provider.setProviderId(businessIdGenerator.nextProviderId());
+        validateRequiredFields(provider, false);
         normalizeFields(provider);
         return providerRepository.save(provider);
     }
@@ -95,9 +97,6 @@ public class HealthcareProviderServiceImpl implements HealthcareProviderService 
     private void validateRequiredFields(HealthcareProvider provider, boolean requireProviderId) {
         if (provider == null) {
             throw new ValidationException("Provider data is required.");
-        }
-        if (requireProviderId && (provider.getProviderId() == null || provider.getProviderId().isBlank())) {
-            throw new ValidationException("Provider ID is required.");
         }
         if (provider.getName() == null || provider.getName().isBlank()) {
             throw new ValidationException("Provider name is required.");
