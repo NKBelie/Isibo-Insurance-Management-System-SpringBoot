@@ -15,8 +15,12 @@
         <main class="page-content">
             <div th:replace="~{fragments/alerts :: alerts}"></div>
             <div class="page-header">
-                <h2>Claims</h2>
-                <div class="page-actions" sec:authorize="hasRole('ADMIN')">
+                <div>
+                    <p class="eyebrow">Claims management</p>
+                    <h2>Claims</h2>
+                    <p class="page-description">Review submitted claims and their current decisions.</p>
+                </div>
+                <div class="page-actions" sec:authorize="hasRole('ADMINISTRATOR')">
                     <a class="btn btn-primary" th:href="@{/claims/new}">Submit Claim</a>
                 </div>
             </div>
@@ -31,7 +35,9 @@
                                     th:selected="${#strings.equalsIgnoreCase(option, status)}">PENDING</option>
                         </select>
                         <button class="btn btn-secondary" type="submit">Filter</button>
+                        <a class="filter-clear" th:if="${search != null or status != null}" th:href="@{/claims}">Clear</a>
                     </div>
+                    <p class="result-count" th:text="'Showing ' + ${pageStart} + '–' + ${pageEnd} + ' of ' + ${filteredCount} + ' claims'">0 claims</p>
                 </form>
                 <div class="table-wrap">
                     <table class="data-table">
@@ -52,11 +58,11 @@
                             <td>
                                 <div class="action-group">
                                     <a class="action-link primary" th:href="@{/claims/{id}(id=${claim.id})}">View</a>
-                                    <a class="action-link" sec:authorize="hasRole('ADMIN')" th:if="${claim.status == 'PENDING'}"
+                                    <a class="action-link" sec:authorize="hasRole('ADMINISTRATOR')" th:if="${claim.status == 'PENDING'}"
                                        th:href="@{/claims/{id}/edit(id=${claim.id})}">Edit</a>
-                                    <a class="action-link" sec:authorize="hasRole('OFFICER')" th:if="${claim.status == 'PENDING'}"
+                                    <a class="action-link" sec:authorize="hasRole('INSURANCE_OFFICER')" th:if="${claim.status == 'PENDING'}"
                                        th:href="@{/claims/{id}/review(id=${claim.id})}">Review</a>
-                                    <form sec:authorize="hasRole('ADMIN')" th:if="${claim.status == 'PENDING'}"
+                                    <form sec:authorize="hasRole('ADMINISTRATOR')" th:if="${claim.status == 'PENDING'}"
                                           th:action="@{/claims/{id}/delete(id=${claim.id})}" method="post" style="display:inline;">
                                         <button class="action-link danger" type="submit" data-confirm-delete="Delete this pending claim?">Delete</button>
                                     </form>
@@ -69,6 +75,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div th:replace="~{fragments/pagination :: controls}"></div>
             </div>
         </main>
     </div>
