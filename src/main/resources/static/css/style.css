@@ -124,7 +124,7 @@ button, input, select, textarea {
 .sidebar-logout .nav-item.danger:hover,
 .sidebar-logout .nav-item.danger:focus-visible {
     background: rgba(217, 45, 32, 0.2);
-    color: var(--white);
+    color: #ffd6d6;
 }
 
 .main-panel {
